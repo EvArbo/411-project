@@ -2,7 +2,7 @@ import logging
 from datetime import datetime, timedelta
 from typing import Dict, List, Optional
 
-from fitness_tracker.api.fitness_api import WgerAPI
+from  meal_max.fitness_tracker.api.fitness_api import WgerAPI
 from fitness_tracker.utils.logger import configure_logger
 
 logger = logging.getLogger(__name__)
