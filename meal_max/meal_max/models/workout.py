@@ -1,9 +1,9 @@
-import logging
 from datetime import datetime, timedelta
 from typing import Dict, List, Optional
-
-from  meal_max.fitness_tracker.api.fitness_api import WgerAPI
+import logging
 from meal_max.utils.logger import configure_logger
+from meal_max.utils.sql_utils import get_db_connection
+from meal_max.fitness_tracker.api.fitness_api import WgerAPI
 
 logger = logging.getLogger(__name__)
 configure_logger(logger)
@@ -87,6 +87,18 @@ class WorkoutManager:
             "notes": notes
         }
 
+        # Use the database connection to save the workout log
+        with get_db_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute(
+                """
+                INSERT INTO workout_logs (id, date, exercise, duration, intensity, notes)
+                VALUES (?, ?, ?, ?, ?, ?)
+                """, 
+                (log_id, datetime.now(), exercise_name, duration, intensity, notes)
+            )
+            conn.commit()
+
         self.workout_logs.append(workout_data)
         logger.info("Logged workout - ID: %s, Exercise: %s, Duration: %d minutes.", log_id, exercise_name, duration)
         return log_id
@@ -101,15 +113,20 @@ class WorkoutManager:
         Returns:
             List[Dict]: A list of dictionaries representing the filtered workout logs.
         """
-        if days is None:
-            logger.info("Returning complete workout history.")
-            return self.workout_logs
+        workout_history = []
 
-        cutoff_date = datetime.now() - timedelta(days=days)
-        filtered_logs = [log for log in self.workout_logs if log["date"] >= cutoff_date]
+        with get_db_connection() as conn:
+            cursor = conn.cursor()
+            if days is None:
+                cursor.execute("SELECT * FROM workout_logs")
+            else:
+                cutoff_date = datetime.now() - timedelta(days=days)
+                cursor.execute("SELECT * FROM workout_logs WHERE date >= ?", (cutoff_date,))
+            
+            workout_history = cursor.fetchall()
 
-        logger.info("Retrieved %d workout logs from the past %d days.", len(filtered_logs), days)
-        return filtered_logs
+        logger.info("Retrieved %d workout logs.", len(workout_history))
+        return workout_history
 
     def calculate_workout_stats(self) -> Dict:
         """
@@ -119,21 +136,28 @@ class WorkoutManager:
             Dict: A dictionary containing workout statistics, including total sessions, total duration,
                   average duration, and breakdown by intensity levels.
         """
-        if not self.workout_logs:
-            logger.info("No workout logs available. Returning empty statistics.")
-            return {"total_workouts": 0}
-
-        total_duration = sum(log["duration"] for log in self.workout_logs)
         stats = {
-            "total_workouts": len(self.workout_logs),
-            "total_duration": total_duration,
-            "avg_duration": total_duration / len(self.workout_logs),
-            "workouts_by_intensity": {
-                "low": len([log for log in self.workout_logs if log["intensity"] == "low"]),
-                "medium": len([log for log in self.workout_logs if log["intensity"] == "medium"]),
-                "high": len([log for log in self.workout_logs if log["intensity"] == "high"])
-            }
+            "total_workouts": 0,
+            "total_duration": 0,
+            "avg_duration": 0,
+            "workouts_by_intensity": {"low": 0, "medium": 0, "high": 0}
         }
+
+        with get_db_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute("SELECT * FROM workout_logs")
+            workout_logs = cursor.fetchall()
+
+            if workout_logs:
+                total_duration = sum(log["duration"] for log in workout_logs)
+                stats["total_workouts"] = len(workout_logs)
+                stats["total_duration"] = total_duration
+                stats["avg_duration"] = total_duration / len(workout_logs)
+                stats["workouts_by_intensity"] = {
+                    "low": len([log for log in workout_logs if log["intensity"] == "low"]),
+                    "medium": len([log for log in workout_logs if log["intensity"] == "medium"]),
+                    "high": len([log for log in workout_logs if log["intensity"] == "high"])
+                }
 
         logger.info("Calculated workout statistics: %s", stats)
         return stats
@@ -161,3 +185,4 @@ class WorkoutManager:
 
         logger.info("Successfully retrieved exercise details: %s", exercise_name)
         return exercises[0]
+
