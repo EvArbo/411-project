@@ -2,7 +2,7 @@ import logging
 from datetime import datetime
 from typing import Dict, List, Optional
 
-from fitness_tracker.utils.logger import configure_logger
+from meal_max.utils.logger import configure_logger
 
 logger = logging.getLogger(__name__)
 configure_logger(logger)
