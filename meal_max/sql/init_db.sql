@@ -1,10 +1,9 @@
-CREATE TABLE IF NOT EXISTS workout_logs (
-    id TEXT PRIMARY KEY,
-    date DATETIME,
-    exercise TEXT,
-    duration INTEGER,
-    intensity TEXT,
-    notes TEXT
+CREATE TABLE IF NOT EXISTS exercises (
+    id INTEGER PRIMARY KEY,              
+    name TEXT NOT NULL,                
+    weight REAL NOT NULL,              
+    repetitions INTEGER NOT NULL,      
+    rpe REAL NOT NULL                  
 );
 
 

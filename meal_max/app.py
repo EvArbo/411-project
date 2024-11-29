@@ -2,8 +2,8 @@ from dotenv import load_dotenv
 from flask import Flask, jsonify, make_response, Response, request
 # from flask_cors import CORS
 
-from meal_max.models import kitchen_model
-from meal_max.models.battle_model import BattleModel
+from meal_max.models import GoalsManager
+from meal_max.models.workout import WorkoutManager
 from meal_max.utils.sql_utils import check_database_connection, check_table_exists
 
 
@@ -16,8 +16,8 @@ app = Flask(__name__)
 # uncomment this
 # CORS(app)
 
-# Initialize the BattleModel
-battle_model = BattleModel()
+# Initialize the GoalsManager
+goals_manager = GoalsManager()
 
 ####################################################
 #
@@ -40,7 +40,7 @@ def healthcheck() -> Response:
 @app.route('/api/db-check', methods=['GET'])
 def db_check() -> Response:
     """
-    Route to check if the database connection and meals table are functional.
+    Route to check if the database connection and workout logs table are functional.
 
     Returns:
         JSON response indicating the database health status.
@@ -51,9 +51,9 @@ def db_check() -> Response:
         app.logger.info("Checking database connection...")
         check_database_connection()
         app.logger.info("Database connection is OK.")
-        app.logger.info("Checking if meals table exists...")
-        check_table_exists("meals")
-        app.logger.info("meals table exists.")
+        app.logger.info("Checking if workout logs table exists...")
+        check_table_exists("workout_logs")
+        app.logger.info("Workout logs table exists.")
         return make_response(jsonify({'database_status': 'healthy'}), 200)
     except Exception as e:
         return make_response(jsonify({'error': str(e)}), 404)
@@ -61,59 +61,71 @@ def db_check() -> Response:
 
 ##########################################################
 #
-# Meals
+# Goals
 #
 ##########################################################
 
+from flask import request, jsonify, make_response, Response
+from datetime import datetime
+import logging
 
-@app.route('/api/create-meal', methods=['POST'])
-def add_meal() -> Response:
+# Assuming GoalsManager instance is created and available as goals_manager
+goals_manager = GoalsManager()
+
+@app.route('/api/set-goal', methods=['POST'])
+def add_goal() -> Response:
     """
-    Route to add a new meal to the database.
+    Route to add a new goal to the database.
 
     Expected JSON Input:
-        - meal (str): The name of the combatant (meal).
-        - cuisine (str): The cuisine type of the combatant (e.g., Italian, Chinese).
-        - price (float): The price of the combatant.
-        - difficulty (str): The preparation difficulty (HIGH, MED, LOW).
+        - goal_type (str): The category of the goal (e.g., "weight_loss", "muscle_gain").
+        - target_value (float): The numeric target value the user aims to achieve.
+        - deadline (str): The date and time by which the goal should be achieved (ISO format).
 
     Returns:
-        JSON response indicating the success of the combatant addition.
-    Raises:
-        400 error if input validation fails.
-        500 error if there is an issue adding the combatant to the database.
+        JSON response indicating the success of the goal addition or errors in input validation.
     """
-    app.logger.info('Creating new meal')
+    app.logger.info('Creating new goal')
+
     try:
         # Get the JSON data from the request
         data = request.get_json()
 
         # Extract and validate required fields
-        meal = data.get('meal')
-        cuisine = data.get('cuisine')
-        price = data.get('price')
-        difficulty = data.get('difficulty')
+        goal_type = data.get('goal_type')
+        target_value = data.get('target_value')
+        deadline_str = data.get('deadline')
 
-        if not meal or not cuisine or price is None or difficulty not in ['HIGH', 'MED', 'LOW']:
-            return make_response(jsonify({'error': 'Invalid input, all fields are required with valid values'}), 400)
+        # Validate fields
+        if not goal_type or target_value is None or not deadline_str:
+            return make_response(jsonify({'error': 'All fields (goal_type, target_value, deadline) are required'}), 400)
 
-        # Check that price is a float and has at most two decimal places
+        # Convert and validate target value
         try:
-            price = float(price)
-            if round(price, 2) != price:
-                raise ValueError("Price has more than two decimal places")
-        except ValueError as e:
-            return make_response(jsonify({'error': 'Price must be a valid float with at most two decimal places'}), 400)
+            target_value = float(target_value)
+            if target_value < 0:
+                raise ValueError("Target value must be non-negative.")
+        except ValueError:
+            return make_response(jsonify({'error': 'Target value must be a valid non-negative number'}), 400)
 
-        # Call the kitchen_model function to add the combatant to the database
-        app.logger.info('Adding meal: %s, %s, %.2f, %s', meal, cuisine, price, difficulty)
-        kitchen_model.create_meal(meal, cuisine, price, difficulty)
+        # Parse and validate deadline
+        try:
+            deadline = datetime.fromisoformat(deadline_str)
+            if deadline < datetime.now():
+                return make_response(jsonify({'error': 'Deadline cannot be in the past'}), 400)
+        except ValueError:
+            return make_response(jsonify({'error': 'Invalid deadline format. Use ISO format (YYYY-MM-DDTHH:MM:SS)'}), 400)
 
-        app.logger.info("Combatant added: %s", meal)
-        return make_response(jsonify({'status': 'success', 'combatant': meal}), 201)
+        # Set the goal using the GoalsManager
+        goal_id = goals_manager.set_goal(goal_type, target_value, deadline)
+
+        app.logger.info("Goal added: %s", goal_id)
+        return make_response(jsonify({'status': 'success', 'goal_id': goal_id}), 201)
+
     except Exception as e:
-        app.logger.error("Failed to add combatant: %s", str(e))
+        app.logger.error("Failed to add goal: %s", str(e))
         return make_response(jsonify({'error': str(e)}), 500)
+
 
 @app.route('/api/clear-meals', methods=['DELETE'])
 def clear_catalog() -> Response:
@@ -215,7 +227,7 @@ def battle() -> Response:
     try:
         app.logger.info('Two meals enter, one meal leaves!')
 
-        winner = battle_model.battle()
+        winner = goals_manager.battle()
 
         return make_response(jsonify({'status': 'success', 'winner': winner}), 200)
     except Exception as e:
@@ -234,7 +246,7 @@ def clear_combatants() -> Response:
     """
     try:
         app.logger.info('Clearing all combatants...')
-        battle_model.clear_combatants()
+        goals_manager.clear_combatants()
         app.logger.info('Combatants cleared.')
         return make_response(jsonify({'status': 'success'}), 200)
     except Exception as e:
@@ -251,7 +263,7 @@ def get_combatants() -> Response:
     """
     try:
         app.logger.info('Getting combatants...')
-        combatants = battle_model.get_combatants()
+        combatants = goals_manager.get_combatants()
         return make_response(jsonify({'status': 'success', 'combatants': combatants}), 200)
     except Exception as e:
         app.logger.error("Failed to get combatants: %s", str(e))
@@ -280,8 +292,8 @@ def prep_combatant() -> Response:
 
         try:
             meal = kitchen_model.get_meal_by_name(meal)
-            battle_model.prep_combatant(meal)
-            combatants = battle_model.get_combatants()
+            goals_manager.prep_combatant(meal)
+            combatants = goals_manager.get_combatants()
         except Exception as e:
             app.logger.error("Failed to prepare combatant: %s", str(e))
             return make_response(jsonify({'error': str(e)}), 500)
