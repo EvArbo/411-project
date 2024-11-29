@@ -6,3 +6,5 @@ CREATE TABLE IF NOT EXISTS workout_logs (
     intensity TEXT,
     notes TEXT
 );
+
+
