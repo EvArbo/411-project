@@ -208,8 +208,8 @@ class WorkoutManager:
         total_weight = sum(exercise.weight for exercise in self.exercises)
 
         summary = {
-            "total_exercises": total_exercises,
-            "total_weight": total_weight,
+            "Exercises in the workout": total_exercises,
+            "Total Volume of Workout": total_weight,
         }
         logger.info("Workout summary: %s", summary)
         return summary

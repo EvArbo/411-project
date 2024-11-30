@@ -6,7 +6,9 @@ from exercise_max.models import Exercise
 from exercise_max.models.workout import WorkoutManager
 from exercise_max.utils.sql_utils import check_database_connection, check_table_exists
 
-
+import os
+wger_api_key = os.getenv("WGER_API_KEY")
+workout_manager = WorkoutManager(wger_api_key)
 # Load environment variables from .env file
 load_dotenv()
 
@@ -15,6 +17,8 @@ app = Flask(__name__)
 # If you get errors that use words like cross origin or flight,
 # uncomment this
 # CORS(app)
+workout_manager = WorkoutManager(wger_api_key="your_wger_api_key")
+
 
 # Initialize the Exercise
 exercise = Exercise()
@@ -144,6 +148,25 @@ def clear_workout() -> Response:
         app.logger.error(f"Error clearing catalog: {e}")
         return make_response(jsonify({'error': str(e)}), 500)
     
+@app.route('/api/get-all-exercises', methods=['GET'])
+def get_all_exercises() -> Response:
+    """
+    Route to retrieve all exercises in the catalog (non-deleted).
+
+
+    Returns:
+        JSON response with the list of exercises or error message.
+    """
+    try:
+        
+        app.logger.info("Retrieving all exercises from the workout")
+        exercises = WorkoutManager.get_all_exercises()
+
+        return make_response(jsonify({'status': 'success', 'exercises': exercises}), 200)
+    except Exception as e:
+        app.logger.error(f"Error retrieving exercises: {e}")
+        return make_response(jsonify({'error': str(e)}), 500)
+    
 @app.route('/api/get-exercise-by-id/<int:exercise_id>', methods=['GET'])
 def get_exercise_by_id(exercise_id: int) -> Response:
     """
@@ -187,134 +210,86 @@ def get_exercise_by_name(exercise_name: str) -> Response:
         app.logger.error(f"Error retrieving exercise by name: {e}")
         return make_response(jsonify({'error': str(e)}), 500)
 
-
 ############################################################
 #
-# Battle
-#
-############################################################
-
-
-@app.route('/api/battle', methods=['GET'])
-def battle() -> Response:
-    """
-    Route to initiate a battle between the two currently prepared exercises.
-
-    Returns:
-        JSON response indicating the result of the battle and the winner.
-    Raises:
-        500 error if there is an issue during the battle.
-    """
-    try:
-        app.logger.info('Two exercises enter, one exercise leaves!')
-
-        winner = exercises_manager.battle()
-
-        return make_response(jsonify({'status': 'success', 'winner': winner}), 200)
-    except Exception as e:
-        app.logger.error(f"Battle error: {e}")
-        return make_response(jsonify({'error': str(e)}), 500)
-
-@app.route('/api/clear-combatants', methods=['POST'])
-def clear_combatants() -> Response:
-    """
-    Route to clear the list of combatants for the battle.
-
-    Returns:
-        JSON response indicating success of the operation.
-    Raises:
-        500 error if there is an issue clearing combatants.
-    """
-    try:
-        app.logger.info('Clearing all combatants...')
-        exercises_manager.clear_combatants()
-        app.logger.info('Combatants cleared.')
-        return make_response(jsonify({'status': 'success'}), 200)
-    except Exception as e:
-        app.logger.error("Failed to clear combatants: %s", str(e))
-        return make_response(jsonify({'error': str(e)}), 500)
-
-@app.route('/api/get-combatants', methods=['GET'])
-def get_combatants() -> Response:
-    """
-    Route to get the list of combatants for the battle.
-
-    Returns:
-        JSON response with the list of combatants.
-    """
-    try:
-        app.logger.info('Getting combatants...')
-        combatants = exercises_manager.get_combatants()
-        return make_response(jsonify({'status': 'success', 'combatants': combatants}), 200)
-    except Exception as e:
-        app.logger.error("Failed to get combatants: %s", str(e))
-        return make_response(jsonify({'error': str(e)}), 500)
-
-@app.route('/api/prep-combatant', methods=['POST'])
-def prep_combatant() -> Response:
-    """
-    Route to prepare a prep a exercise making it a combatant for a battle.
-
-    Parameters:
-        - exercise (str): The name of the exercise
-
-    Returns:
-        JSON response indicating the success of combatant preparation.
-    Raises:
-        500 error if there is an issue preparing combatants.
-    """
-    try:
-        data = request.json
-        exercise = data.get('exercise')
-        app.logger.info("Preparing combatant: %s", exercise)
-
-        if not exercise:
-            return make_response(jsonify({'error': 'You must name a combatant'}), 400)
-
-        try:
-            exercise = WorkoutManager.get_exercise_by_name(exercise)
-            exercises_manager.prep_combatant(exercise)
-            combatants = exercises_manager.get_combatants()
-        except Exception as e:
-            app.logger.error("Failed to prepare combatant: %s", str(e))
-            return make_response(jsonify({'error': str(e)}), 500)
-        return make_response(jsonify({'status': 'success', 'combatants': combatants}), 200)
-
-    except Exception as e:
-        app.logger.error("Failed to prepare combatants: %s", str(e))
-        return make_response(jsonify({'error': str(e)}), 500)
-
-
-############################################################
-#
-# Leaderboard
+# Workout Summary
 #
 ############################################################
 
 
-@app.route('/api/leaderboard', methods=['GET'])
-def get_leaderboard() -> Response:
+@app.route('/api/get-workout-summary', methods=['GET'])
+def get_workout_summary() -> Response:
     """
-    Route to get the leaderboard of exercises sorted by wins, battles, or win percentage.
+    Route to get the workout summary of exercises sorted by wins, battles, or win percentage.
 
     Query Parameters:
         - sort (str): The field to sort by ('wins', 'battles', or 'win_pct'). Default is 'wins'.
 
     Returns:
-        JSON response with a sorted leaderboard of exercises.
+        JSON response with a sorted workout summary of exercises.
     Raises:
-        500 error if there is an issue generating the leaderboard.
+        500 error if there is an issue generating the workout summary.
     """
     try:
-        sort_by = request.args.get('sort', 'wins')  # Default sort by wins
-        app.logger.info("Generating leaderboard sorted by %s", sort_by)
+        
+        app.logger.info("Generating workout summary")
 
-        leaderboard_data = WorkoutManager.get_leaderboard(sort_by)
+        workout_summary_data = WorkoutManager.get_workout_summary()
 
-        return make_response(jsonify({'status': 'success', 'leaderboard': leaderboard_data}), 200)
+        return make_response(jsonify({'status': 'success', 'workout summary': workout_summary_data}), 200)
     except Exception as e:
-        app.logger.error(f"Error generating leaderboard: {e}")
+        app.logger.error(f"Error generating workout summary: {e}")
         return make_response(jsonify({'error': str(e)}), 500)
+
+##########################################################
+#
+# Fetch WgerAPI
+#
+##########################################################
+
+@app.route('/api/fetch-exercises', methods=['GET'])
+def fetch_exercises() -> Response:
+    """
+    Fetch exercises from the Wger API. Optionally filter by muscle group.
+
+    Query Parameters:
+        - muscle_id (optional, int): ID of the muscle group to filter exercises.
+
+    Returns:
+        JSON response with the list of exercises or an error message.
+    """
+    try:
+        muscle_id = request.args.get('muscle_id', type=int)
+        exercises = workout_manager.fetch_exercises(muscle_id=muscle_id)
+        
+        if exercises:
+            return make_response(jsonify({'status': 'success', 'data': exercises}), 200)
+        else:
+            return make_response(jsonify({'status': 'error', 'message': 'No exercises found'}), 404)
+    except Exception as e:
+        app.logger.error(f"Error fetching exercises: {e}")
+        return make_response(jsonify({'status': 'error', 'message': str(e)}), 500)
+
+
+
+@app.route('/api/fetch-muscles', methods=['GET'])
+def fetch_muscles() -> Response:
+    """
+    Fetch muscle groups from the Wger API.
+
+    Returns:
+        JSON response with the list of muscle groups or an error message.
+    """
+    try:
+        muscles = workout_manager.fetch_muscles()
+        
+        if muscles:
+            return make_response(jsonify({'status': 'success', 'data': muscles}), 200)
+        else:
+            return make_response(jsonify({'status': 'error', 'message': 'No muscle groups found'}), 404)
+    except Exception as e:
+        app.logger.error(f"Error fetching muscles: {e}")
+        return make_response(jsonify({'status': 'error', 'message': str(e)}), 500)
 
 
 
