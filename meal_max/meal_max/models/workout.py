@@ -8,7 +8,7 @@ logger = logging.getLogger(__name__)
 configure_logger(logger)
 
 
-class WorkoutModel:
+class WorkoutManager:
     """
     A class to manage a workout consisting of multiple exercises, with Wger API integration.
 
@@ -172,6 +172,29 @@ class WorkoutModel:
             raise ValueError(f"Exercise with ID {exercise_id} not found")
 
         return exercise
+
+    def get_exercise_by_name(self, exercise_name: str) -> Exercise:
+        """
+        Retrieves an exercise by its name.
+
+        Args:
+            exercise_name (str): The name of the exercise to retrieve.
+
+        Returns:
+            Exercise: The exercise with the specified name.
+
+        Raises:
+            ValueError: If the exercise is not found.
+        """
+        logger.info("Retrieving exercise with name %s", exercise_name)
+        exercise = next((ex for ex in self.exercises if ex.name.lower() == exercise_name.lower()), None)
+
+        if exercise is None:
+            logger.error("Exercise with name %s not found", exercise_name)
+            raise ValueError(f"Exercise with name {exercise_name} not found")
+
+        return exercise
+
 
     def get_workout_summary(self) -> Dict:
         """

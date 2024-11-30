@@ -2,9 +2,9 @@ from dotenv import load_dotenv
 from flask import Flask, jsonify, make_response, Response, request
 # from flask_cors import CORS
 
-from meal_max.models import GoalsManager
-from meal_max.models.workout import WorkoutManager
-from meal_max.utils.sql_utils import check_database_connection, check_table_exists
+from exercise_max.models import Exercise
+from exercise_max.models.workout import WorkoutManager
+from exercise_max.utils.sql_utils import check_database_connection, check_table_exists
 
 
 # Load environment variables from .env file
@@ -16,8 +16,8 @@ app = Flask(__name__)
 # uncomment this
 # CORS(app)
 
-# Initialize the GoalsManager
-goals_manager = GoalsManager()
+# Initialize the Exercise
+exercise = Exercise()
 
 ####################################################
 #
@@ -61,7 +61,7 @@ def db_check() -> Response:
 
 ##########################################################
 #
-# Goals
+# Exercises
 #
 ##########################################################
 
@@ -69,141 +69,122 @@ from flask import request, jsonify, make_response, Response
 from datetime import datetime
 import logging
 
-# Assuming GoalsManager instance is created and available as goals_manager
-goals_manager = GoalsManager()
+exercises_manager = Exercise()
 
-@app.route('/api/set-goal', methods=['POST'])
-def add_goal() -> Response:
+@app.route('/api/add-exercise', methods=['POST'])
+def add_exercise() -> Response:
     """
-    Route to add a new goal to the database.
+    Route to add a new exercise to the database.
 
     Expected JSON Input:
-        - goal_type (str): The category of the goal (e.g., "weight_loss", "muscle_gain").
-        - target_value (float): The numeric target value the user aims to achieve.
-        - deadline (str): The date and time by which the goal should be achieved (ISO format).
-
+        - name (str): The name of the exercise.
+        - weight (float): The numeric weight of the exercise.
+        - repetitions (str): Number of repetitions performed.
+        - rpe (float): Rating of Perceived Exertion (0-10 scale).
     Returns:
-        JSON response indicating the success of the goal addition or errors in input validation.
+        JSON response indicating the success of the exercise addition or errors in input validation.
     """
-    app.logger.info('Creating new goal')
+    app.logger.info('Creating new exercise')
 
     try:
         # Get the JSON data from the request
         data = request.get_json()
 
         # Extract and validate required fields
-        goal_type = data.get('goal_type')
-        target_value = data.get('target_value')
-        deadline_str = data.get('deadline')
+        name = data.get('name')
+        weight = data.get('weight')
+        repetitions = data.get('repetitions')
+        rpe = data.get('rpe')
 
         # Validate fields
-        if not goal_type or target_value is None or not deadline_str:
-            return make_response(jsonify({'error': 'All fields (goal_type, target_value, deadline) are required'}), 400)
+        if not name or weight is None or not repetitions or rpe is None:
+            return make_response(jsonify({'error': 'All fields (name, weight, repetitions, rpe) are required'}), 400)
 
-        # Convert and validate target value
-        try:
-            target_value = float(target_value)
-            if target_value < 0:
-                raise ValueError("Target value must be non-negative.")
-        except ValueError:
-            return make_response(jsonify({'error': 'Target value must be a valid non-negative number'}), 400)
-
-        # Parse and validate deadline
-        try:
-            deadline = datetime.fromisoformat(deadline_str)
-            if deadline < datetime.now():
-                return make_response(jsonify({'error': 'Deadline cannot be in the past'}), 400)
-        except ValueError:
-            return make_response(jsonify({'error': 'Invalid deadline format. Use ISO format (YYYY-MM-DDTHH:MM:SS)'}), 400)
-
-        # Set the goal using the GoalsManager
-        goal_id = goals_manager.set_goal(goal_type, target_value, deadline)
-
-        app.logger.info("Goal added: %s", goal_id)
-        return make_response(jsonify({'status': 'success', 'goal_id': goal_id}), 201)
-
+        app.logger.info('Adding exercise: ', name, weight, repetitions, rpe)
+        Exercise.create_exercise(name=name, weight=weight, repetitions=repetitions, rpe=rpe)
+        app.logger.info('Song added to playlist: ', name, weight, repetitions, rpe)
+        return make_response(jsonify({'status': 'success', 'exercise': name}), 201)
     except Exception as e:
-        app.logger.error("Failed to add goal: %s", str(e))
+        app.logger.error("Failed to add exercise: %s", str(e))
         return make_response(jsonify({'error': str(e)}), 500)
-
-
-@app.route('/api/clear-meals', methods=['DELETE'])
-def clear_catalog() -> Response:
+    
+@app.route('/api/remove-exercise/<int:exercise_id>', methods=['DELETE'])
+def remove_exercise(exercise_id: int) -> Response:
     """
-    Route to clear all meals (recreates the table).
+    Route to delete an exercise by its ID. This performs a soft delete by marking it as deleted.
+
+    Path Parameter:
+        - exercise_id (int): The ID of the exercise to delete.
 
     Returns:
         JSON response indicating success of the operation or error message.
     """
     try:
-        app.logger.info("Clearing the meals")
-        kitchen_model.clear_meals()
+        app.logger.info(f"Deleting exercise by ID: {exercise_id}")
+
+        WorkoutManager.delete_exercise(exercise_id)
+        return make_response(jsonify({'status': 'success'}), 200)
+    except Exception as e:
+        app.logger.error(f"Error deleting exercise: {e}")
+        return make_response(jsonify({'error': str(e)}), 500)
+
+@app.route('/api/clear-workout', methods=['DELETE'])
+def clear_workout() -> Response:
+    """
+    Route to clear all exercises (recreates the table).
+
+    Returns:
+        JSON response indicating success of the operation or error message.
+    """
+    try:
+        app.logger.info("Clearing the exercises")
+        WorkoutManager.clear_workout()
         return make_response(jsonify({'status': 'success'}), 200)
     except Exception as e:
         app.logger.error(f"Error clearing catalog: {e}")
         return make_response(jsonify({'error': str(e)}), 500)
-
-@app.route('/api/delete-meal/<int:meal_id>', methods=['DELETE'])
-def delete_meal(meal_id: int) -> Response:
+    
+@app.route('/api/get-exercise-by-id/<int:exercise_id>', methods=['GET'])
+def get_exercise_by_id(exercise_id: int) -> Response:
     """
-    Route to delete a meal by its ID. This performs a soft delete by marking it as deleted.
+    Route to get a exercise by its ID.
 
     Path Parameter:
-        - meal_id (int): The ID of the meal to delete.
+        - exercise_id (int): The ID of the exercise.
 
     Returns:
-        JSON response indicating success of the operation or error message.
+        JSON response with the exercise details or error message.
     """
     try:
-        app.logger.info(f"Deleting meal by ID: {meal_id}")
+        app.logger.info(f"Retrieving exercise by ID: {exercise_id}")
 
-        kitchen_model.delete_meal(meal_id)
-        return make_response(jsonify({'status': 'success'}), 200)
+        exercise = WorkoutManager.get_exercise_by_id(exercise_id)
+        return make_response(jsonify({'status': 'success', 'exercise': exercise}), 200)
     except Exception as e:
-        app.logger.error(f"Error deleting meal: {e}")
+        app.logger.error(f"Error retrieving exercise by ID: {e}")
         return make_response(jsonify({'error': str(e)}), 500)
 
-@app.route('/api/get-meal-by-id/<int:meal_id>', methods=['GET'])
-def get_meal_by_id(meal_id: int) -> Response:
+@app.route('/api/get-exercise-by-name/<string:exercise_name>', methods=['GET'])
+def get_exercise_by_name(exercise_name: str) -> Response:
     """
-    Route to get a meal by its ID.
+    Route to get a exercise by its name.
 
     Path Parameter:
-        - meal_id (int): The ID of the meal.
+        - exercise_name (str): The name of the exercise.
 
     Returns:
-        JSON response with the meal details or error message.
+        JSON response with the exercise details or error message.
     """
     try:
-        app.logger.info(f"Retrieving meal by ID: {meal_id}")
+        app.logger.info(f"Retrieving exercise by name: {exercise_name}")
 
-        meal = kitchen_model.get_meal_by_id(meal_id)
-        return make_response(jsonify({'status': 'success', 'meal': meal}), 200)
+        if not exercise_name:
+            return make_response(jsonify({'error': 'Exercise name is required'}), 400)
+
+        exercise = WorkoutManager.get_exercise_by_name(exercise_name)
+        return make_response(jsonify({'status': 'success', 'exercise': exercise}), 200)
     except Exception as e:
-        app.logger.error(f"Error retrieving meal by ID: {e}")
-        return make_response(jsonify({'error': str(e)}), 500)
-
-@app.route('/api/get-meal-by-name/<string:meal_name>', methods=['GET'])
-def get_meal_by_name(meal_name: str) -> Response:
-    """
-    Route to get a meal by its name.
-
-    Path Parameter:
-        - meal_name (str): The name of the meal.
-
-    Returns:
-        JSON response with the meal details or error message.
-    """
-    try:
-        app.logger.info(f"Retrieving meal by name: {meal_name}")
-
-        if not meal_name:
-            return make_response(jsonify({'error': 'Meal name is required'}), 400)
-
-        meal = kitchen_model.get_meal_by_name(meal_name)
-        return make_response(jsonify({'status': 'success', 'meal': meal}), 200)
-    except Exception as e:
-        app.logger.error(f"Error retrieving meal by name: {e}")
+        app.logger.error(f"Error retrieving exercise by name: {e}")
         return make_response(jsonify({'error': str(e)}), 500)
 
 
@@ -217,7 +198,7 @@ def get_meal_by_name(meal_name: str) -> Response:
 @app.route('/api/battle', methods=['GET'])
 def battle() -> Response:
     """
-    Route to initiate a battle between the two currently prepared meals.
+    Route to initiate a battle between the two currently prepared exercises.
 
     Returns:
         JSON response indicating the result of the battle and the winner.
@@ -225,9 +206,9 @@ def battle() -> Response:
         500 error if there is an issue during the battle.
     """
     try:
-        app.logger.info('Two meals enter, one meal leaves!')
+        app.logger.info('Two exercises enter, one exercise leaves!')
 
-        winner = goals_manager.battle()
+        winner = exercises_manager.battle()
 
         return make_response(jsonify({'status': 'success', 'winner': winner}), 200)
     except Exception as e:
@@ -246,7 +227,7 @@ def clear_combatants() -> Response:
     """
     try:
         app.logger.info('Clearing all combatants...')
-        goals_manager.clear_combatants()
+        exercises_manager.clear_combatants()
         app.logger.info('Combatants cleared.')
         return make_response(jsonify({'status': 'success'}), 200)
     except Exception as e:
@@ -263,7 +244,7 @@ def get_combatants() -> Response:
     """
     try:
         app.logger.info('Getting combatants...')
-        combatants = goals_manager.get_combatants()
+        combatants = exercises_manager.get_combatants()
         return make_response(jsonify({'status': 'success', 'combatants': combatants}), 200)
     except Exception as e:
         app.logger.error("Failed to get combatants: %s", str(e))
@@ -272,10 +253,10 @@ def get_combatants() -> Response:
 @app.route('/api/prep-combatant', methods=['POST'])
 def prep_combatant() -> Response:
     """
-    Route to prepare a prep a meal making it a combatant for a battle.
+    Route to prepare a prep a exercise making it a combatant for a battle.
 
     Parameters:
-        - meal (str): The name of the meal
+        - exercise (str): The name of the exercise
 
     Returns:
         JSON response indicating the success of combatant preparation.
@@ -284,16 +265,16 @@ def prep_combatant() -> Response:
     """
     try:
         data = request.json
-        meal = data.get('meal')
-        app.logger.info("Preparing combatant: %s", meal)
+        exercise = data.get('exercise')
+        app.logger.info("Preparing combatant: %s", exercise)
 
-        if not meal:
+        if not exercise:
             return make_response(jsonify({'error': 'You must name a combatant'}), 400)
 
         try:
-            meal = kitchen_model.get_meal_by_name(meal)
-            goals_manager.prep_combatant(meal)
-            combatants = goals_manager.get_combatants()
+            exercise = WorkoutManager.get_exercise_by_name(exercise)
+            exercises_manager.prep_combatant(exercise)
+            combatants = exercises_manager.get_combatants()
         except Exception as e:
             app.logger.error("Failed to prepare combatant: %s", str(e))
             return make_response(jsonify({'error': str(e)}), 500)
@@ -314,13 +295,13 @@ def prep_combatant() -> Response:
 @app.route('/api/leaderboard', methods=['GET'])
 def get_leaderboard() -> Response:
     """
-    Route to get the leaderboard of meals sorted by wins, battles, or win percentage.
+    Route to get the leaderboard of exercises sorted by wins, battles, or win percentage.
 
     Query Parameters:
         - sort (str): The field to sort by ('wins', 'battles', or 'win_pct'). Default is 'wins'.
 
     Returns:
-        JSON response with a sorted leaderboard of meals.
+        JSON response with a sorted leaderboard of exercises.
     Raises:
         500 error if there is an issue generating the leaderboard.
     """
@@ -328,7 +309,7 @@ def get_leaderboard() -> Response:
         sort_by = request.args.get('sort', 'wins')  # Default sort by wins
         app.logger.info("Generating leaderboard sorted by %s", sort_by)
 
-        leaderboard_data = kitchen_model.get_leaderboard(sort_by)
+        leaderboard_data = WorkoutManager.get_leaderboard(sort_by)
 
         return make_response(jsonify({'status': 'success', 'leaderboard': leaderboard_data}), 200)
     except Exception as e:
