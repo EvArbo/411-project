@@ -69,7 +69,27 @@ def create_exercise(name: str, weight: float, repetitions: int, rpe: float) -> N
         logger.error("Database error while creating exercise: %s", str(e))
         raise sqlite3.Error(f"Database error: {str(e)}")
 
+def clear_catalog() -> None:
+    """
+    Recreates the exercise table, effectively deleting all exercises.
 
+    Raises:
+        sqlite3.Error: If any database error occurs.
+    """
+    try:
+        with open(os.getenv("SQL_CREATE_TABLE_PATH", "/app/sql/init_db.sql"), "r") as fh:
+            create_table_script = fh.read()
+        with get_db_connection() as conn:
+            cursor = conn.cursor()
+            cursor.executescript(create_table_script)
+            conn.commit()
+
+            logger.info("Catalog cleared successfully.")
+
+    except sqlite3.Error as e:
+        logger.error("Database error while clearing catalog: %s", str(e))
+        raise e
+    
 def delete_exercise(exercise_id: int) -> None:
     """
     Deletes an exercise from the catalog by its ID.
@@ -100,7 +120,32 @@ def delete_exercise(exercise_id: int) -> None:
         logger.error("Database error while deleting exercise: %s", str(e))
         raise e
 
+def get_all_exercises() -> list[Exercise]:
+    """
+    Retrieves all exercises from the catalog.
 
+    Returns:
+        list[Exercise]: A list of all Exercise objects.
+
+    Raises:
+        sqlite3.Error: If any database error occurs.
+    """
+    try:
+        with get_db_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute("""
+                SELECT id, name, weight, repetitions, rpe
+                FROM workout_logs
+            """)
+            rows = cursor.fetchall()
+
+            return [Exercise(id=row[0], name=row[1], weight=row[2], repetitions=row[3], rpe=row[4]) for row in rows]
+
+    except sqlite3.Error as e:
+        logger.error("Database error while retrieving all exercises: %s", str(e))
+        raise e
+    
+    
 def get_exercise_by_id(exercise_id: int) -> Exercise:
     """
     Retrieves an exercise by its ID.
@@ -132,32 +177,6 @@ def get_exercise_by_id(exercise_id: int) -> Exercise:
 
     except sqlite3.Error as e:
         logger.error("Database error while retrieving exercise by ID: %s", str(e))
-        raise e
-
-
-def get_all_exercises() -> list[Exercise]:
-    """
-    Retrieves all exercises from the catalog.
-
-    Returns:
-        list[Exercise]: A list of all Exercise objects.
-
-    Raises:
-        sqlite3.Error: If any database error occurs.
-    """
-    try:
-        with get_db_connection() as conn:
-            cursor = conn.cursor()
-            cursor.execute("""
-                SELECT id, name, weight, repetitions, rpe
-                FROM workout_logs
-            """)
-            rows = cursor.fetchall()
-
-            return [Exercise(id=row[0], name=row[1], weight=row[2], repetitions=row[3], rpe=row[4]) for row in rows]
-
-    except sqlite3.Error as e:
-        logger.error("Database error while retrieving all exercises: %s", str(e))
         raise e
 
 
