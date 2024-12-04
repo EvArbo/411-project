@@ -53,18 +53,18 @@ def create_exercise(name: str, weight: float, sets: int, repetitions: int, rpe: 
         raise ValueError(f"Invalid name: {name} (must be a string).")
     if weight < 0:
         raise ValueError(f"Invalid weight: {weight} (must be non-negative).")
-    if repetitions < 0 or not isinstance(repetitions, int):
-        raise ValueError(f"Invalid repetitions: {repetitions} (must be at least 0 and an integer).")
-    if sets < 1 or not isinstance(sets, int):
-        raise ValueError(f"Invalid sets: {sets} (must be at least 1 and an integer).")
+    if not isinstance(sets, int) or sets < 1:
+        raise ValueError(f"Invalid number of sets: {sets} (must be at least 1 and an integer).")
+    if not isinstance(repetitions, int) or repetitions < 0:
+        raise ValueError(f"Invalid number of repetitions: {repetitions} (must be at least 0 and an integer).")
     if not (0 <= rpe <= 10):
-        raise ValueError(f"Invalid RPE: {rpe} (must be between 0 and 10).")
+        raise ValueError(f"Invalid RPE: {rpe} (must be a float between 0 and 10).")
 
     try:
         with get_db_connection() as conn:
             cursor = conn.cursor()
             cursor.execute("""
-                INSERT INTO workout_logs (name, weight, sets, repetitions, rpe)
+                INSERT INTO workout_log (name, weight, sets, repetitions, rpe)
                 VALUES (?, ?, ?, ?, ?)
             """, (name, weight, sets, repetitions, rpe))
             conn.commit()
@@ -97,33 +97,38 @@ def clear_catalog() -> None:
     
 def delete_exercise(exercise_id: int) -> None:
     """
-    Deletes an exercise from the catalog by its ID.
+    Deletes an exercise from the catalog by its ID (soft delete by setting deleted to TRUE).
 
     Args:
         exercise_id (int): The ID of the exercise to delete.
 
     Raises:
-        ValueError: If the exercise with the given ID does not exist.
+        ValueError: If the exercise with the given ID does not exist or is already deleted.
         sqlite3.Error: If any database error occurs.
     """
     try:
         with get_db_connection() as conn:
             cursor = conn.cursor()
 
-            # Check if the exercise exists
-            cursor.execute("SELECT id FROM workout_logs WHERE id = ?", (exercise_id,))
-            if not cursor.fetchone():
-                raise ValueError(f"Exercise with ID {exercise_id} not found")
+            # Check if the exercise exists and is already deleted
+            cursor.execute("SELECT deleted FROM workout_log WHERE id = ?", (exercise_id,))
+            result = cursor.fetchone()
 
-            # Perform the delete
-            cursor.execute("DELETE FROM workout_logs WHERE id = ?", (exercise_id,))
+            if not result:
+                raise ValueError(f"Exercise with ID {exercise_id} not found")
+            if result[0]:  # If `deleted` is True
+                raise ValueError(f"Exercise with ID {exercise_id} has already been deleted")
+
+            # Perform the soft delete
+            cursor.execute("UPDATE workout_log SET deleted = TRUE WHERE id = ?", (exercise_id,))
             conn.commit()
 
-            logger.info("Exercise with ID %s deleted.", exercise_id)
+            logger.info("Exercise with ID %s marked as deleted.", exercise_id)
 
     except sqlite3.Error as e:
         logger.error("Database error while deleting exercise: %s", str(e))
         raise e
+
 
 def get_all_exercises() -> list[Exercise]:
     """
@@ -140,11 +145,23 @@ def get_all_exercises() -> list[Exercise]:
             cursor = conn.cursor()
             cursor.execute("""
                 SELECT id, name, weight, sets, repetitions, rpe
-                FROM workout_logs
+                FROM workout_log
+                WHERE deleted = FALSE
+
             """)
             rows = cursor.fetchall()
-
-            return [Exercise(id=row[0], name=row[1], sets = row[2], weight=row[3], repetitions=row[4], rpe=row[5]) for row in rows]
+            exercises = [
+                {
+                    "id": row[0],
+                    "name": row[1],
+                    "weight": row[2],
+                    "sets": row[3],
+                    "repetitions": row[4],
+                    "rpe": row[5],
+                }
+                for row in rows
+            ]
+            return exercises
 
     except sqlite3.Error as e:
         logger.error("Database error while retrieving all exercises: %s", str(e))
@@ -169,14 +186,14 @@ def get_exercise_by_id(exercise_id: int) -> Exercise:
         with get_db_connection() as conn:
             cursor = conn.cursor()
             cursor.execute("""
-                SELECT id, name, weight, sets, repetitions, rpe, deleted
-                FROM workout_logs
+                SELECT id, name, weight, sets, repetitions, rpe
+                FROM workout_log
                 WHERE id = ?
             """, (exercise_id,))
             row = cursor.fetchone()
 
             if row:
-                return [Exercise(id=row[0], name=row[1], sets = row[2], weight=row[3], repetitions=row[4], rpe=row[5])]
+                return Exercise(id=row[0], name=row[1], weight = row[2], sets=row[3], repetitions=row[4], rpe=row[5])
             else:
                 raise ValueError(f"Exercise with ID {exercise_id} not found")
 
