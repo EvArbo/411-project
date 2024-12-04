@@ -26,7 +26,7 @@ def create_app(config_class=ProductionConfig):
     with app.app_context():
         db.create_all()  # Recreate all tables
 
-    exercise = Exercise()
+    workout_manager = WorkoutManager()
 
     ####################################################
     #
