@@ -4,8 +4,8 @@ import logging
 import os
 import sqlite3
 
-from utils.logger import configure_logger
-from utils.sql_utils import get_db_connection
+from meal_max.utils.logger import configure_logger
+from meal_max.utils.sql_utils import get_db_connection
 
 # Configure logger
 logger = logging.getLogger(__name__)

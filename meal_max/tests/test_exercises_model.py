@@ -10,7 +10,6 @@ from meal_max.models.exercises import (
     delete_exercise,
     get_exercise_by_id,
     get_all_exercises,
-    update_exercise,
     clear_catalog
 )
 
@@ -77,43 +76,43 @@ def test_create_exercise_invalid_name():
     """Test error when trying to create a exercise with an invalid name (e.g., not a string)"""
 
     # Attempt to create a exercise with a invalid name
-    with pytest.raises(ValueError, match="Invalid exercise -180: invalid \(must be a string\)."):
+    with pytest.raises(ValueError, match="Invalid exercise -180: invalid (must be a string)."):
         create_exercise(name=-1, weight=-315, sets=2, repetitions=4, rpe=7)
 
 def test_create_exercise_invalid_weight():
     """Test error when trying to create a exercise with an invalid weight (e.g., negative weight)"""
 
     # Attempt to create a exercise with a negative weight
-    with pytest.raises(ValueError, match="Invalid exercise weight: -180 \(must be a positive integer\)."):
+    with pytest.raises(ValueError, match="Invalid exercise weight: -180 (must be a positive integer)."):
         create_exercise(name="Barbell Deadlift", weight=-315, sets=2, repetitions=4, rpe=7)
 
 def test_create_exercise_invalid_sets():
     """Test error when trying to create a exercise with an invalid number of sets (e.g., less than 1 or non-integer)."""
 
     # Attempt to create a exercise with a sets value of less than 0 
-    with pytest.raises(ValueError, match="Invalid number of sets provided: -1 \(must be an integer greater than or equal to 1\)."):
+    with pytest.raises(ValueError, match="Invalid number of sets provided: -1 (must be an integer greater than or equal to 1)."):
         create_exercise(name="Barbell Deadlift", weight=315, sets=-1, repetitions=-1, rpe=7)
 
     # Attempt to create a exercise with a non-integer number of reps
-    with pytest.raises(ValueError, match="Invalid number of sets provided: invalid \(must be an integer greater than or equal to 1\)."):
+    with pytest.raises(ValueError, match="Invalid number of sets provided: invalid (must be an integer greater than or equal to 1)."):
         create_exercise(name="Barbell Deadlift", weight=315, sets="invalid", repetitions=4, rpe=7)
 
 def test_create_exercise_invalid_repetitions():
     """Test error when trying to create a exercise with an invalid number of repetitions (e.g., less than 0 or non-integer)."""
 
     # Attempt to create a exercise with a repetition value of less than 0 
-    with pytest.raises(ValueError, match="Invalid number of repetitions provided: -1 \(must be an integer greater than or equal to 0\)."):
+    with pytest.raises(ValueError, match="Invalid number of repetitions provided: -1 (must be an integer greater than or equal to 0)."):
         create_exercise(name="Barbell Deadlift", weight=315, sets=2, repetitions=-1, rpe=7)
 
     # Attempt to create a exercise with a non-integer number of reps
-    with pytest.raises(ValueError, match="Invalid number of repetitions provided: invalid \(must be an integer greater than or equal to 0\)."):
+    with pytest.raises(ValueError, match="Invalid number of repetitions provided: invalid (must be an integer greater than or equal to 0)."):
         create_exercise(name="Barbell Deadlift", weight=315, sets=2, repetitions="invalid", rpe=7)
 
 def test_create_exercise_invalid_rpe():
     """Test error when trying to create a exercise with an invalid rpe (e.g., not within the range of 0 and 10)"""
 
     # Attempt to create a exercise with a negative weight
-    with pytest.raises(ValueError, match="Invalid rpe: -180 \(must be a float between 0 and 10\)."):
+    with pytest.raises(ValueError, match="Invalid rpe: -180 (must be a float between 0 and 10)."):
         create_exercise(name="Barbell Deadlift", weight=-315, sets=2, repetitions=4, rpe=-1)
 
 def test_clear_catalog(mock_cursor, mocker):
