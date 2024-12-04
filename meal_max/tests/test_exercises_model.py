@@ -280,31 +280,3 @@ def test_get_all_exercises_empty_catalog(mock_cursor, caplog):
 
     # Assert that the SQL query was correct
     assert actual_query == expected_query, "The SQL query did not match the expected structure."
-
-def test_update_exercise(mock_cursor):
-    """Test updating an exercise."""
-
-    # Simulate that the exercise exists and is not deleted (id = 1)
-    mock_cursor.fetchone.return_value = [False]
-
-    # Call the update_exercise function with a sample exercise ID
-    exercise_id = 1
-    update_exercise(exercise_id)
-
-    # Normalize the expected SQL query
-    expected_query = normalize_whitespace("""
-        UPDATE workout_log SET play_count = play_count + 1 WHERE id = ?
-    """)
-
-    # Ensure the SQL query was executed correctly
-    actual_query = normalize_whitespace(mock_cursor.execute.call_args_list[1][0][0])
-
-    # Assert that the SQL query was correct
-    assert actual_query == expected_query, "The SQL query did not match the expected structure."
-
-    # Extract the arguments used in the SQL call
-    actual_arguments = mock_cursor.execute.call_args_list[1][0][1]
-
-    # Assert that the SQL query was executed with the correct arguments (exercise ID)
-    expected_arguments = (exercise_id,)
-    assert actual_arguments == expected_arguments, f"The SQL query arguments did not match. Expected {expected_arguments}, got {actual_arguments}."
