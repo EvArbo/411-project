@@ -1,8 +1,8 @@
 import requests
 from typing import List, Dict, Optional
-from exercise_tracker.models.exercise_model import Exercise
+from meal_max.models.exercises import Exercise
 import logging
-from exercise_tracker.utils.logger import configure_logger
+from meal_max.utils.logger import configure_logger
 
 logger = logging.getLogger(__name__)
 configure_logger(logger)
