@@ -74,7 +74,6 @@ def create_exercise(name: str, weight: float, sets: int, repetitions: int, rpe: 
         logger.error("Database error while creating exercise: %s", str(e))
         raise sqlite3.Error(f"Database error: {str(e)}")
 
-
     
 def delete_exercise(exercise_id: int) -> None:
     """

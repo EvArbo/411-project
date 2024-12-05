@@ -36,76 +36,22 @@ check_health() {
 
 ##############################################
 #
-# User management
-#
-##############################################
-
-# Function to create a user
-create_user() {
-  echo "Creating a new user..."
-  curl -s -X POST "$BASE_URL/create-user" -H "Content-Type: application/json" \
-    -d '{"username":"testuser", "password":"password123"}' | grep -q '"status": "user added"'
-  if [ $? -eq 0 ]; then
-    echo "User created successfully."
-  else
-    echo "Failed to create user."
-    exit 1
-  fi
-}
-
-# Function to log in a user
-login_user() {
-  echo "Logging in user..."
-  response=$(curl -s -X POST "$BASE_URL/login" -H "Content-Type: application/json" \
-    -d '{"username":"testuser", "password":"password123"}')
-  if echo "$response" | grep -q '"message": "User testuser logged in successfully."'; then
-    echo "User logged in successfully."
-    if [ "$ECHO_JSON" = true ]; then
-      echo "Login Response JSON:"
-      echo "$response" | jq .
-    fi
-  else
-    echo "Failed to log in user."
-    if [ "$ECHO_JSON" = true ]; then
-      echo "Error Response JSON:"
-      echo "$response" | jq .
-    fi
-    exit 1
-  fi
-}
-
-# Function to log out a user
-logout_user() {
-  echo "Logging out user..."
-  response=$(curl -s -X POST "$BASE_URL/logout" -H "Content-Type: application/json" \
-    -d '{"username":"testuser"}')
-  if echo "$response" | grep -q '"message": "User testuser logged out successfully."'; then
-    echo "User logged out successfully."
-    if [ "$ECHO_JSON" = true ]; then
-      echo "Logout Response JSON:"
-      echo "$response" | jq .
-    fi
-  else
-    echo "Failed to log out user."
-    if [ "$ECHO_JSON" = true ]; then
-      echo "Error Response JSON:"
-      echo "$response" | jq .
-    fi
-    exit 1
-  fi
-}
-
-##############################################
-#
 # Exercises
 #
 ##############################################
 
 # Function to add a exercise 
 create_exercise() {
-  echo "Adding an exercise..."
+  name=$1
+  weight=$2
+  sets=$3
+  repetitions=$4
+  rpe=$5
+
+  echo "Adding exercise ($name) to the playlist..."
   curl -s -X POST "$BASE_URL/create-exercise" -H "Content-Type: application/json" \
-    -d '{"name":"Deadlift", "weight":315, "sets":4, "repetitions":3, "rpe":7}' | grep -q '"status": "combatant added"'
+    -d "{\"name\":\"$name\", \"weight\":\"$weight\", \"sets\":$sets, \"repetitions\":\"$repetitions\", \"rpe\":$rpe}" | grep -q '"status": "success"'
+
   if [ $? -eq 0 ]; then
     echo "Exercise added successfully."
   else
@@ -116,20 +62,37 @@ create_exercise() {
 
 # Function to delete a exercise by ID (1)
 delete_exercise_by_id() {
-  echo "Deleting exercise by ID (1)..."
-  response=$(curl -s -X DELETE "$BASE_URL/delete-exercise/1")
-  if echo "$response" | grep -q '"status": "exercise deleted"'; then
-    echo "exercise deleted successfully by ID (1)."
+  exercise_id=$1
+
+  echo "Deleting exercise by ID ($exercise_id)..."
+  response=$(curl -s -X DELETE "$BASE_URL/delete-exercise/$exercise_id")
+  if echo "$response" | grep -q '"status": "success"'; then
+    echo "Exercise deleted successfully by ID ($exercise_id)."
   else
-    echo "Failed to delete exercise by ID (1)."
+    echo "Failed to delete exercise by ID ($exercise_id)."
     exit 1
   fi
 }
 
+get_all_exercises() {
+  echo "Getting all exercises..."
+  response=$(curl -s -X GET "$BASE_URL/get-all-exercises-from-catalog")
+  if echo "$response" | grep -q '"status": "success"'; then
+    echo "All exercises retrieved successfully."
+    if [ "$ECHO_JSON" = true ]; then
+      echo "Exercises JSON:"
+      echo "$response" | jq .
+    fi
+  else
+    echo "Failed to get exercises."
+    exit 1
+  fi
+}
 # Function to get a exercise by ID (1)
 get_exercise_by_id() {
+  exercises_id = $1
   echo "Getting exercise by ID (1)..."
-  response=$(curl -s -X GET "$BASE_URL/get-exercise-by-id/1")
+  response=$(curl -s -X GET "$BASE_URL/get-exercise-from-catalog-by-id/1")
   if echo "$response" | grep -q '"status": "success"'; then
     echo "exercise retrieved successfully by ID (1)."
     if [ "$ECHO_JSON" = true ]; then
@@ -142,21 +105,6 @@ get_exercise_by_id() {
   fi
 }
 
-# Function to get a exercise by name
-get_exercise_by_name() {
-  echo "Getting exercise by name (Spaghetti)..."
-  response=$(curl -s -X GET "$BASE_URL/get-exercise-by-name/Spaghetti")
-  if echo "$response" | grep -q '"status": "success"'; then
-    echo "exercise retrieved successfully by name (Spaghetti)."
-    if [ "$ECHO_JSON" = true ]; then
-      echo "exercise JSON (Spaghetti):"
-      echo "$response" | jq .
-    fi
-  else
-    echo "Failed to get exercise by name (Spaghetti)."
-    exit 1
-  fi
-}
 
 ############################################
 #
@@ -284,7 +232,20 @@ check_health
 init_db
 create_user
 login_user
-create_exercise
+
+
+create_exercise "Barbell Deadlift" 315 4 2 7
+create_exercise "Barbell Bench Press" 225 5 3 8
+create_exercise "Barbell Squat" 275 4 4 7
+create_exercise "Barbell Overhead Press" 135 3 3 6
+create_exercise "Pull-Up" 0 4 4 8
+
+get_exercise_by_id 1
+
+get_all_exercises
+
+delete_exercise_by_id 1
+
 clear_combatants
 prep_combatant
 prep_combatant
@@ -297,8 +258,7 @@ run_battle
 get_leaderboard_wins
 get_leaderboard_win_pct
 logout_user
-get_exercise_by_name
-get_exercise_by_id
-delete_exercise_by_id
+
+
 
 echo "All tests passed successfully!"
