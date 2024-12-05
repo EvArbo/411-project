@@ -74,26 +74,7 @@ def create_exercise(name: str, weight: float, sets: int, repetitions: int, rpe: 
         logger.error("Database error while creating exercise: %s", str(e))
         raise sqlite3.Error(f"Database error: {str(e)}")
 
-def clear_catalog() -> None:
-    """
-    Recreates the exercise table, effectively deleting all exercises.
 
-    Raises:
-        sqlite3.Error: If any database error occurs.
-    """
-    try:
-        with open(os.getenv("SQL_CREATE_TABLE_PATH", "/app/sql/init_db.sql"), "r") as fh:
-            create_table_script = fh.read()
-        with get_db_connection() as conn:
-            cursor = conn.cursor()
-            cursor.executescript(create_table_script)
-            conn.commit()
-
-            logger.info("Catalog cleared successfully.")
-
-    except sqlite3.Error as e:
-        logger.error("Database error while clearing catalog: %s", str(e))
-        raise e
     
 def delete_exercise(exercise_id: int) -> None:
     """

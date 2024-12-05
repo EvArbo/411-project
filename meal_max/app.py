@@ -110,21 +110,7 @@ def create_app(config_class=ProductionConfig):
             app.logger.error("Failed to add exercise: %s", str(e))
             return make_response(jsonify({'error': str(e)}), 500)
 
-    @app.route('/api/clear-catalog', methods=['DELETE'])
-    def clear_catalog() -> Response:
-        """
-        Route to clear the entire exercise catalog (recreates the table).
-
-        Returns:
-            JSON response indicating success of the operation or error message.
-        """
-        try:
-            app.logger.info("Clearing the exercise catalog")
-            Exercise.clear_catalog()
-            return make_response(jsonify({'status': 'success'}), 200)
-        except Exception as e:
-            app.logger.error(f"Error clearing catalog: {e}")
-            return make_response(jsonify({'error': str(e)}), 500)
+    
         
     @app.route('/api/delete-exercise/<int:exercise_id>', methods=['DELETE'])
     def delete_exercise(exercise_id: int) -> Response:

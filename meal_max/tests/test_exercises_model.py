@@ -9,9 +9,7 @@ from meal_max.models.exercises import (
     create_exercise,
     delete_exercise,
     get_exercise_by_id,
-    get_all_exercises,
-    clear_catalog
-)
+    get_all_exercises)
 
 ######################################################
 #
@@ -122,21 +120,6 @@ def test_create_exercise_invalid_rpe():
         create_exercise(name="Barbell Deadlift", weight=315, sets=2, repetitions=4, rpe=15)
 
 
-def test_clear_catalog(mock_cursor, mocker):
-    """Test clearing the entire exercise catalog (removes all exercises)."""
-
-    # Mock the file reading
-    mocker.patch.dict('os.environ', {'SQL_CREATE_TABLE_PATH': 'sql/init_db.sql'})
-    mock_open = mocker.patch('builtins.open', mocker.mock_open(read_data="The body of the create statement"))
-
-    # Call the clear_database function
-    clear_catalog()
-
-    # Ensure the file was opened using the environment variable's path
-    mock_open.assert_called_once_with('sql/init_db.sql', 'r')
-
-    # Verify that the correct SQL script was executed
-    mock_cursor.executescript.assert_called_once()
 
 def test_delete_exercise(mock_cursor):
     """Test soft deleting a exercise from the catalog by exercise ID."""
