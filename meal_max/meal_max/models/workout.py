@@ -124,7 +124,9 @@ class WorkoutManager:
             logger.error("Failed to fetch equipment from Wger API: %s", e)
             return []
 
-
+    def fetch_images(self)
+        
+        endpoint = f"{self.wger_api_base_url}exerciseimage/"
 
     ##################################################
     # Exercise Management Functions
