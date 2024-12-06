@@ -106,71 +106,6 @@ get_exercise_by_id() {
 }
 
 
-############################################
-#
-# Battle
-#
-############################################
-
-# Function to clear the combatants
-clear_combatants() {
-  echo "Clearing combatants..."
-  curl -s -X POST "$BASE_URL/clear-combatants" -H "Content-Type: application/json" | grep -q '"status": "combatants cleared"'
-  if [ $? -eq 0 ]; then
-    echo "Combatants cleared successfully."
-  else
-    echo "Failed to clear combatants."
-    exit 1
-  fi
-}
-
-# Function to get the current list of combatants
-get_combatants() {
-  echo "Getting the current list of combatants..."
-  response=$(curl -s -X GET "$BASE_URL/get-combatants")
-
-  # Check if the response contains combatants or an empty list
-  if echo "$response" | grep -q '"combatants"'; then
-    echo "Combatants retrieved successfully."
-    if [ "$ECHO_JSON" = true ]; then
-      echo "Combatants JSON:"
-      echo "$response" | jq .
-    fi
-  else
-    echo "Failed to get combatants or no combatants found."
-    if [ "$ECHO_JSON" = true ]; then
-      echo "Error or empty response:"
-      echo "$response" | jq .
-    fi
-    exit 1
-  fi
-}
-
-# Function to prepare a combatant for battle
-prep_combatant() {
-  echo "Preparing combatant for battle..."
-  curl -s -X POST "$BASE_URL/prep-combatant" -H "Content-Type: application/json" \
-    -d '{"exercise":"Spaghetti"}' | grep -q '"status": "combatant prepared"'
-  if [ $? -eq 0 ]; then
-    echo "Combatant prepared successfully."
-  else
-    echo "Failed to prepare combatant."
-    exit 1
-  fi
-}
-
-# Function to run a battle
-run_battle() {
-  echo "Running a battle..."
-  curl -s -X GET "$BASE_URL/battle" | grep -q '"status": "battle complete"'
-  if [ $? -eq 0 ]; then
-    echo "Battle completed successfully."
-  else
-    echo "Failed to complete battle."
-    exit 1
-  fi
-}
-
 ######################################################
 #
 # Leaderboard
@@ -246,18 +181,7 @@ get_all_exercises
 
 delete_exercise_by_id 1
 
-clear_combatants
-prep_combatant
-prep_combatant
-get_combatants
-run_battle
-prep_combatant
-run_battle
-prep_combatant
-run_battle
-get_leaderboard_wins
-get_leaderboard_win_pct
-logout_user
+
 
 
 
