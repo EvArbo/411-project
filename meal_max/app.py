@@ -2,7 +2,7 @@ from dotenv import load_dotenv
 from flask import Flask, jsonify, make_response, Response, request
 # from flask_cors import CORS
 
-from meal_max.models import Exercise
+from meal_max.models.exercises import Exercise
 from meal_max.models.workout import WorkoutManager
 from meal_max.utils.sql_utils import check_database_connection, check_table_exists
 from config import ProductionConfig

@@ -32,7 +32,7 @@ def test_get_random_request_failure(mocker):
     with pytest.raises(RuntimeError, match="Request to random.org failed: Connection error"):
         get_random()
 
-  def test_get_random_timeout(mocker):
+def test_get_random_timeout(mocker):
     """Simulate  a timeout."""
     mocker.patch("requests.get", side_effect=requests.exceptions.Timeout)
 
