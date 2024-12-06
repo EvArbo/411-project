@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Set the name of the virtual environment directory
-VENV_DIR="fitness_tracker_venv"
+VENV_DIR="meal_max_venv"
 REQUIREMENTS_FILE="requirements.lock"
 
 # Check if the virtual environment already exists
