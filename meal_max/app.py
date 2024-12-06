@@ -546,6 +546,43 @@ def create_app(config_class=ProductionConfig):
     # Fetch WgerAPI
     #
     ##########################################################
+    @app.route('/api/fetch-categories', methods=['GET'])
+    def fetch_exercise_categories() -> Response:
+        """
+        Fetch exercise categories from the Wger API.
+
+        Returns:
+            JSON response with the list of exercise categories or an error message.
+        """
+        try:
+            categories = workout_manager.fetch_exercise_categories()
+
+            if categories:
+                return make_response(jsonify({'status': 'success', 'data': categories}), 200)
+            else:
+                return make_response(jsonify({'status': 'error', 'message': 'No categories found'}), 404)
+        except Exception as e:
+            app.logger.error(f"Error fetching exercise categories: {e}")
+            return make_response(jsonify({'status': 'error', 'message': str(e)}), 500)
+
+    @app.route('/api/fetch-muscles', methods=['GET'])
+    def fetch_muscles() -> Response:
+        """
+        Fetch muscle groups from the Wger API.
+
+        Returns:
+            JSON response with the list of muscle groups or an error message.
+        """
+        try:
+            muscles = workout_manager.fetch_muscles()
+
+            if muscles:
+                return make_response(jsonify({'status': 'success', 'data': muscles}), 200)
+            else:
+                return make_response(jsonify({'status': 'error', 'message': 'No muscle groups found'}), 404)
+        except Exception as e:
+            app.logger.error(f"Error fetching muscles: {e}")
+            return make_response(jsonify({'status': 'error', 'message': str(e)}), 500)
 
     @app.route('/api/fetch-exercises', methods=['GET'])
     def fetch_exercises() -> Response:
@@ -561,7 +598,7 @@ def create_app(config_class=ProductionConfig):
         try:
             muscle_id = request.args.get('muscle_id', type=int)
             exercises = workout_manager.fetch_exercises(muscle_id=muscle_id)
-            
+
             if exercises:
                 return make_response(jsonify({'status': 'success', 'data': exercises}), 200)
             else:
@@ -570,29 +607,43 @@ def create_app(config_class=ProductionConfig):
             app.logger.error(f"Error fetching exercises: {e}")
             return make_response(jsonify({'status': 'error', 'message': str(e)}), 500)
 
-
-
-    @app.route('/api/fetch-muscles', methods=['GET'])
-    def fetch_muscles() -> Response:
+    @app.route('/api/fetch-equipment', methods=['GET'])
+    def fetch_equipment() -> Response:
         """
-        Fetch muscle groups from the Wger API.
+        Fetch equipment from the Wger API.
 
         Returns:
-            JSON response with the list of muscle groups or an error message.
+            JSON response with the list of equipment or an error message.
         """
         try:
-            muscles = workout_manager.fetch_muscles()
-            
-            if muscles:
-                return make_response(jsonify({'status': 'success', 'data': muscles}), 200)
+            equipment = workout_manager.fetch_equipment()
+
+            if equipment:
+                return make_response(jsonify({'status': 'success', 'data': equipment}), 200)
             else:
-                return make_response(jsonify({'status': 'error', 'message': 'No muscle groups found'}), 404)
+                return make_response(jsonify({'status': 'error', 'message': 'No equipment found'}), 404)
         except Exception as e:
-            app.logger.error(f"Error fetching muscles: {e}")
+            app.logger.error(f"Error fetching equipment: {e}")
             return make_response(jsonify({'status': 'error', 'message': str(e)}), 500)
 
+    @app.route('/api/fetch-images', methods=['GET'])
+    def fetch_images() -> Response:
+        """
+        Fetch exercise images from the Wger API.
 
+        Returns:
+            JSON response with the list of images or an error message.
+        """
+        try:
+            images = workout_manager.fetch_images()
 
+            if images:
+                return make_response(jsonify({'status': 'success', 'data': images}), 200)
+            else:
+                return make_response(jsonify({'status': 'error', 'message': 'No images found'}), 404)
+        except Exception as e:
+            app.logger.error(f"Error fetching images: {e}")
+            return make_response(jsonify({'status': 'error', 'message': str(e)}), 500)
 
 
 
