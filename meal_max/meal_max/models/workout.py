@@ -32,12 +32,13 @@ class WorkoutManager:
     ##################################################
     # Wger API Integration Functions
     ##################################################
-    def fetch_exercise_categories(self) -> List[Dict]:  
+
+    def fetch_exercise_categories(self) -> List[Dict]:
         """
         Fetches exercise categories from the Wger API.
 
         Returns:
-            List[Dict]: A list of exercise categories.
+            List[Dict]: A list of exercise categories with their details.
         """
         logger.info("Fetching exercise categories from Wger API")
         endpoint = f"{self.wger_api_base_url}exercisecategory/"
@@ -46,19 +47,19 @@ class WorkoutManager:
         try:
             response = requests.get(endpoint, headers=headers)
             response.raise_for_status()
-            exercises = response.json().get("results", [])
-            logger.info("Successfully fetched %d exercise categories", len(exercises))
-            return exercises
+            categories = response.json().get("results", [])
+            logger.info("Successfully fetched %d exercise categories", len(categories))
+            return categories
         except requests.RequestException as e:
             logger.error("Failed to fetch exercise categories from Wger API: %s", e)
             return []
-    
+
     def fetch_muscles(self) -> List[Dict]:
         """
         Fetches muscle groups from the Wger API.
 
         Returns:
-            List[Dict]: A list of muscle groups.
+            List[Dict]: A list of muscle groups with their details.
         """
         logger.info("Fetching muscle groups from Wger API")
         endpoint = f"{self.wger_api_base_url}muscle/"
@@ -73,7 +74,7 @@ class WorkoutManager:
         except requests.RequestException as e:
             logger.error("Failed to fetch muscle groups from Wger API: %s", e)
             return []
-        
+
     def fetch_exercises(self, muscle_id: Optional[int] = None) -> List[Dict]:
         """
         Fetches exercises from the Wger API. Optionally filters by muscle group.
@@ -86,7 +87,7 @@ class WorkoutManager:
         """
         logger.info("Fetching exercises from Wger API")
         endpoint = f"{self.wger_api_base_url}exercise/"
-        params = {"language": 2}  # English language
+        params = {"language": 2}  # Fetches exercises in English
         if muscle_id:
             params["muscles"] = muscle_id
 
@@ -111,7 +112,6 @@ class WorkoutManager:
         """
         logger.info("Fetching equipment from Wger API")
         endpoint = f"{self.wger_api_base_url}equipment/"
-        
         headers = {"Authorization": f"Token {self.wger_api_key}"}
 
         try:
@@ -124,9 +124,27 @@ class WorkoutManager:
             logger.error("Failed to fetch equipment from Wger API: %s", e)
             return []
 
-    def fetch_images(self):
-        
+    def fetch_images(self) -> List[Dict]:
+        """
+        Fetches exercise images from the Wger API.
+
+        Returns:
+            List[Dict]: A list of exercise images and their details.
+        """
+        logger.info("Fetching exercise images from Wger API")
         endpoint = f"{self.wger_api_base_url}exerciseimage/"
+        headers = {"Authorization": f"Token {self.wger_api_key}"}
+
+        try:
+            response = requests.get(endpoint, headers=headers)
+            response.raise_for_status()
+            images = response.json().get("results", [])
+            logger.info("Successfully fetched %d exercise images", len(images))
+            return images
+        except requests.RequestException as e:
+            logger.error("Failed to fetch exercise images from Wger API: %s", e)
+            return []
+            
 
     ##################################################
     # Exercise Management Functions

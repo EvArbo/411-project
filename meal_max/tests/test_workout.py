@@ -157,4 +157,4 @@ def test_clear_workout(workout_manager, sample_exercises):
     workout_manager.clear_workout()
     assert len(workout_manager.exercises) == 0, "List should be empty after clearing workout."
 
-
+  
