@@ -1,7 +1,9 @@
 import pytest
+import os
 
 from app import create_app
 from config import TestConfig
+from dotenv import load_dotenv
 from meal_max.db import db
 
 @pytest.fixture
@@ -21,3 +23,12 @@ def client(app):
 def session(app):
     with app.app_context():
         yield db.session
+
+load_dotenv()
+
+@pytest.fixture
+def wger_api_key():
+    key = os.getenv("WGER_API_KEY")
+    if not key:
+        raise ValueError("WGER_API_KEY not found in environment variables")
+    return key

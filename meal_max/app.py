@@ -26,7 +26,7 @@ def create_app(config_class=ProductionConfig):
     with app.app_context():
         db.create_all()  # Recreate all tables
 
-    workout_manager = WorkoutManager()
+    workout_manager = WorkoutManager(wger_api_key)
 
     ####################################################
     #
@@ -373,7 +373,7 @@ def create_app(config_class=ProductionConfig):
 
 
 
-    exercises_manager = Exercise()
+    exercises_manager = Exercise(123456, "Evan", 140, 1, 1, 5)
 
     @app.route('/api/add-exercise', methods=['POST'])
     def add_exercise() -> Response:
