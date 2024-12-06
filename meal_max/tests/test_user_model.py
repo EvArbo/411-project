@@ -10,6 +10,11 @@ def sample_user():
         "password": "securepassword123"
     }
 
+@pytest.fixture
+def session():
+    return {
+        
+    }
 
 ##########################################################
 # User Creation

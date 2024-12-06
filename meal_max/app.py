@@ -2,9 +2,9 @@ from dotenv import load_dotenv
 from flask import Flask, jsonify, make_response, Response, request
 # from flask_cors import CORS
 
-from exercise_max.models import Exercise
-from exercise_max.models.workout import WorkoutManager
-from exercise_max.utils.sql_utils import check_database_connection, check_table_exists
+from meal_max.models import Exercise
+from meal_max.models.workout import WorkoutManager
+from meal_max.utils.sql_utils import check_database_connection, check_table_exists
 from config import ProductionConfig
 from meal_max.db import db
 from meal_max.models.mongo_session_model import login_user, logout_user

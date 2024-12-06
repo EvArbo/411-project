@@ -7,8 +7,8 @@ from meal_max.models.exercises import (
     create_exercise,
     delete_exercise,
     get_exercise_by_id,
-    get_all_exercises,
-    clear_catalog
+    get_all_exercises
+    #clear_catalog
 )
 
 ######################################################
