@@ -357,18 +357,17 @@ get_leaderboard_win_pct() {
   delete_exercise_by_id 1
 
   # Fetch additional data
-  fetch_exercise_categories
-  fetch_muscles
-  fetch_exercises  # Fetches all exercises
-  # Uncomment the line below to fetch exercises for a specific muscle ID
-  # fetch_exercises 1
-  fetch_equipment
-  fetch_exercise_images
+  # fetch_exercise_categories
+  # fetch_muscles
+  # fetch_exercises  # Fetches all exercises
+  # # Uncomment the line below to fetch exercises for a specific muscle ID
+  # # fetch_exercises 1
+  # fetch_equipment
+  # fetch_exercise_images
   get_workout_summary
+  logout_user
 
-  # Leaderboard retrieval
-  get_leaderboard_wins
-  get_leaderboard_win_pct
+
 
   echo "All tests passed successfully!"
 

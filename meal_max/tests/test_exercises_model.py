@@ -1,45 +1,12 @@
-from contextlib import contextmanager
-import re
-import sqlite3
+from dataclasses import asdict
 
 import pytest
 
-from meal_max.models.exercises import (
-    Exercise,
-    create_exercise,
-    delete_exercise,
-    get_exercise_by_id,
-    get_all_exercises)
+from meal_max.models.exercises import Exercises
 
-######################################################
-#
-#    Fixtures
-#
-######################################################
-
-def normalize_whitespace(sql_query: str) -> str:
-    return re.sub(r'\s+', ' ', sql_query).strip()
-
-# Mocking the database connection for tests
 @pytest.fixture
-def mock_cursor(mocker):
-    mock_conn = mocker.Mock()
-    mock_cursor = mocker.Mock()
-
-    # Mock the connection's cursor
-    mock_conn.cursor.return_value = mock_cursor
-    mock_cursor.fetchone.return_value = None  # Default return for queries
-    mock_cursor.fetchall.return_value = []
-    mock_conn.commit.return_value = None
-
-    # Mock the get_db_connection context manager from sql_utils
-    @contextmanager
-    def mock_get_db_connection():
-        yield mock_conn  # Yield the mocked connection object
-
-    mocker.patch("meal_max.models.exercises.get_db_connection", mock_get_db_connection)
-
-    return mock_cursor  # Return the mock cursor so we can set expectations per test
+def mock_redis_client(mocker):
+    return mocker.patch('meal_max.models.exercises.redis_client')
 
 ######################################################
 #
@@ -47,53 +14,44 @@ def mock_cursor(mocker):
 #
 ######################################################
 
-def test_create_exercise(mock_cursor):
+def test_create_exercise(session):
     """Test creating a new exercise in the catalog."""
 
     # Call the function to create a new exercise
-    create_exercise(name="Barbell Deadlift", weight=315, sets=2, repetitions=4, rpe=7)
+    Exercises.create_exercise(name="Barbell Deadlift", weight=315, sets=2, repetitions=4, rpe=7)
 
-    expected_query = normalize_whitespace("""
-        INSERT INTO workout_log (name, weight, sets, repetitions, rpe)
-        VALUES (?, ?, ?, ?, ?)
-    """)
+    result = Exercises.query.one()
+    assert result.name == "Barbell Deadlift"
+    assert result.weight == 315
+    assert result.sets == 2
+    assert result.repetitions == 4
+    assert result.rpe == 7
 
-    actual_query = normalize_whitespace(mock_cursor.execute.call_args[0][0])
-
-    # Assert that the SQL query was correct
-    assert actual_query == expected_query, "The SQL query did not match the expected structure."
-
-    # Extract the arguments used in the SQL call (second element of call_args)
-    actual_arguments = mock_cursor.execute.call_args[0][1]
-
-    # Assert that the SQL query was executed with the correct arguments
-    expected_arguments = ("Barbell Deadlift", 315, 2, 4, 7)
-    assert actual_arguments == expected_arguments, f"The SQL query arguments did not match. Expected {expected_arguments}, got {actual_arguments}."
 
 def test_create_exercise_invalid_name():
     """Test error when trying to create a exercise with an invalid name (e.g., not a string)"""
 
     # Attempt to create a exercise with a invalid name
     with pytest.raises(ValueError, match=r"Invalid name: -1 \(must be a string\)."):
-        create_exercise(name=-1, weight=315, sets=2, repetitions=4, rpe=7)
+        Exercises.create_exercise(name=-1, weight=315, sets=2, repetitions=4, rpe=7)
 
 def test_create_exercise_invalid_weight():
     """Test error when trying to create a exercise with an invalid weight (e.g., negative weight)"""
 
     # Attempt to create a exercise with a negative weight
     with pytest.raises(ValueError, match=r"Invalid weight: -315 \(must be non-negative\)."):
-        create_exercise(name="Barbell Deadlift", weight=-315, sets=2, repetitions=4, rpe=7)
+        Exercises.create_exercise(name="Barbell Deadlift", weight=-315, sets=2, repetitions=4, rpe=7)
 
 def test_create_exercise_invalid_sets():
     """Test error when trying to create an exercise with an invalid number of sets (e.g., less than 1 or non-integer)."""
 
     # Attempt to create an exercise with a sets value of less than 1
     with pytest.raises(ValueError, match=r"Invalid number of sets: 0 \(must be at least 1 and an integer\)."):
-        create_exercise(name="Barbell Deadlift", weight=315, sets=0, repetitions=4, rpe=7)
+        Exercises.create_exercise(name="Barbell Deadlift", weight=315, sets=0, repetitions=4, rpe=7)
 
     # Attempt to create an exercise with a non-integer number of sets
     with pytest.raises(ValueError, match=r"Invalid number of sets: invalid \(must be at least 1 and an integer\)."):
-        create_exercise(name="Barbell Deadlift", weight=315, sets="invalid", repetitions=4, rpe=7)
+        Exercises.create_exercise(name="Barbell Deadlift", weight=315, sets="invalid", repetitions=4, rpe=7)
 
 
 def test_create_exercise_invalid_repetitions():
@@ -101,11 +59,11 @@ def test_create_exercise_invalid_repetitions():
 
     # Attempt to create an exercise with a repetition value of less than 0
     with pytest.raises(ValueError, match=r"Invalid number of repetitions: -1 \(must be at least 0 and an integer\)."):
-        create_exercise(name="Barbell Deadlift", weight=315, sets=2, repetitions=-1, rpe=7)
+        Exercises.create_exercise(name="Barbell Deadlift", weight=315, sets=2, repetitions=-1, rpe=7)
 
     # Attempt to create an exercise with a non-integer number of repetitions
     with pytest.raises(ValueError, match=r"Invalid number of repetitions: invalid \(must be at least 0 and an integer\)."):
-        create_exercise(name="Barbell Deadlift", weight=315, sets=2, repetitions="invalid", rpe=7)
+        Exercises.create_exercise(name="Barbell Deadlift", weight=315, sets=2, repetitions="invalid", rpe=7)
 
 
 def test_create_exercise_invalid_rpe():
@@ -113,43 +71,20 @@ def test_create_exercise_invalid_rpe():
 
     # Attempt to create an exercise with an RPE less than 0
     with pytest.raises(ValueError, match=r"Invalid RPE: -180 \(must be a float between 0 and 10\)."):
-        create_exercise(name="Barbell Deadlift", weight=315, sets=2, repetitions=4, rpe=-180)
+        Exercises.create_exercise(name="Barbell Deadlift", weight=315, sets=2, repetitions=4, rpe=-180)
 
     # Attempt to create an exercise with an RPE greater than 10
     with pytest.raises(ValueError, match=r"Invalid RPE: 15 \(must be a float between 0 and 10\)."):
-        create_exercise(name="Barbell Deadlift", weight=315, sets=2, repetitions=4, rpe=15)
+        Exercises.create_exercise(name="Barbell Deadlift", weight=315, sets=2, repetitions=4, rpe=15)
 
-
-
-def test_delete_exercise(mock_cursor):
+def test_delete_exercise(session, mock_redi_client):
     """Test soft deleting a exercise from the catalog by exercise ID."""
+    Exercises.create_exercise(name="Barbell Deadlift", weight=315, sets=2, repetitions=4, rpe=7)
+    exercise = Exercises.query.one()
+    Exercises.delete_exercise(exercise.id)
 
-    # Simulate that the exercise exists (id = 1)
-    mock_cursor.fetchone.return_value = ([False])
-
-    # Call the delete_exercise function
-    delete_exercise(1)
-
-    # Normalize the SQL for both queries (SELECT and UPDATE)
-    expected_select_sql = normalize_whitespace("SELECT deleted FROM workout_log WHERE id = ?")
-    expected_update_sql = normalize_whitespace("UPDATE workout_log SET deleted = TRUE WHERE id = ?")
-    # Access both calls to `execute()` using `call_args_list`
-    actual_select_sql = normalize_whitespace(mock_cursor.execute.call_args_list[0][0][0])
-    actual_update_sql = normalize_whitespace(mock_cursor.execute.call_args_list[1][0][0])
-
-    # Ensure the correct SQL queries were executed
-    assert actual_select_sql == expected_select_sql, "The SELECT query did not match the expected structure."
-    assert actual_update_sql == expected_update_sql, "The UPDATE query did not match the expected structure."
-
-    # Ensure the correct arguments were used in both SQL queries
-    expected_select_args = (1,)
-    expected_update_args = (1,)
-
-    actual_select_args = mock_cursor.execute.call_args_list[0][0][1]
-    actual_update_args = mock_cursor.execute.call_args_list[1][0][1]
-
-    assert actual_select_args == expected_select_args, f"The SELECT query arguments did not match. Expected {expected_select_args}, got {actual_select_args}."
-    assert actual_update_args == expected_update_args, f"The UPDATE query arguments did not match. Expected {expected_update_args}, got {actual_update_args}."
+    result = session.get(Exercises, 1)
+    assert result.deleted is True
 
 def test_delete_exercise_bad_id(mock_cursor):
     """Test error when trying to delete a non-existent exercise."""
@@ -159,7 +94,7 @@ def test_delete_exercise_bad_id(mock_cursor):
 
     # Expect a ValueError when attempting to delete a non-existent exercise
     with pytest.raises(ValueError, match="Exercise with ID 999 not found"):
-        delete_exercise(999)
+        Exercises.delete_exercise(999)
 
 def test_delete_exercise_already_deleted(mock_cursor):
     """Test error when trying to delete a exercise that's already marked as deleted."""
@@ -169,7 +104,7 @@ def test_delete_exercise_already_deleted(mock_cursor):
 
     # Expect a ValueError when attempting to delete a exercise that's already been deleted
     with pytest.raises(ValueError, match="Exercise with ID 999 has already been deleted"):
-        delete_exercise(999)
+        Exercises.delete_exercise(999)
 
 
 
@@ -185,7 +120,7 @@ def test_get_exercise_by_id(mock_cursor):
 
 
     # Call the function and check the result
-    result = get_exercise_by_id(1)
+    result = Exercises.get_exercise_by_id(1)
 
     # Expected result based on the simulated fetchone return value
     expected_result = Exercise(1, "Barbell Deadlift", 315, 2, 1, 7)
