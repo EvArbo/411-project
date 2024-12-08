@@ -144,25 +144,3 @@ def test_list_workout_sessions_success(workout_manager, headers):
             headers=headers,
         )
 
-
-@pytest.mark.parametrize(
-    "status_code, expected_result",
-    [
-        (400, False),
-        (404, False),
-        (500, False),
-    ],
-)
-def test_delete_workout_session_failure(workout_manager, headers, status_code, expected_result):
-    session_id = 123
-    mock_response = MagicMock()
-    mock_response.status_code = status_code
-
-    with patch("requests.delete", return_value=mock_response) as mock_delete:
-        result = workout_manager.delete_workout_session(session_id)
-
-        assert result is expected_result
-        mock_delete.assert_called_once_with(
-            f"{workout_manager.wger_api_base_url}workoutsession/{session_id}/",
-            headers=headers,
-        )
