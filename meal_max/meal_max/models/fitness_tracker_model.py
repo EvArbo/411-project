@@ -1,8 +1,7 @@
 import requests
 from typing import List, Dict, Optional
-from meal_max.models.exercises import Exercise
 import logging
-from meal_max.utils.logger import configure_logger
+from meal_max.utils.logger import configure_logger  
 
 logger = logging.getLogger(__name__)
 configure_logger(logger)
@@ -26,7 +25,7 @@ class WorkoutManager:
         Args:
             wger_api_key (str): API key for accessing the Wger API.
         """
-        self.exercises: List[Exercise] = []
+        self.exercises = []
         self.wger_api_base_url = "https://wger.de/api/v2/"
         self.wger_api_key = os.getenv("WGER_API_KEY")
 

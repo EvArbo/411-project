@@ -66,15 +66,16 @@ check_health() {
 ###############################################
 
 create_workout_session() {
+  # Use command-line arguments for session details
   echo "Creating a workout session..."
   response=$(curl -s -X POST "$BASE_URL/create-workout-session" -H "Content-Type: application/json" \
     -d '{
-      "workout": 1,
-      "date": "2024-12-08",
-      "notes": "Smoketest workout session",
-      "impression": "3",
-      "time_start": "10:00:00",
-      "time_end": "11:00:00"
+      "workout": '"$1"',
+      "date": "'"$2"'",
+      "notes": "'"$3"'",
+      "impression": "'"$4"'",
+      "time_start": "'"$5"'",
+      "time_end": "'"$6"'"
     }')
   check_response "$response"
 }
@@ -91,12 +92,12 @@ update_workout_session() {
   echo "Updating workout session with ID $session_id..."
   response=$(curl -s -X PUT "$BASE_URL/update-workout-session/$session_id" -H "Content-Type: application/json" \
     -d '{
-      "workout": 1,
-      "date": "2024-12-08",
-      "notes": "Updated smoketest workout session",
-      "impression": "4",
-      "time_start": "10:30:00",
-      "time_end": "11:30:00"
+      "workout": '"$2"',
+      "date": "'"$3"'",
+      "notes": "'"$4"'",
+      "impression": "'"$5"'",
+      "time_start": "'"$6"'",
+      "time_end": "'"$7"'"
     }')
   check_response "$response"
 }
@@ -146,20 +147,20 @@ check_health
 # Database initialization
 initialize_database
 
-# Create a workout session
-create_workout_session
+# Create a workout session with parameters from $1 to $6
+create_workout_session "$1" "$2" "$3" "$4" "$5" "$6"
 
-# Retrieve a workout session (assuming ID 1 exists after creation)
-retrieve_workout_session 1
+# Retrieve the workout session using $1 (session_id)
+retrieve_workout_session "$1"
 
-# Update the workout session
-update_workout_session 1
+# Update the workout session with new parameters
+update_workout_session "$1" "$2" "$3" "$4" "$5" "$6" "$7"
 
 # List all workout sessions
 list_workout_sessions
 
-# Delete the workout session
-delete_workout_session 1
+# Delete the workout session using $1 (session_id)
+delete_workout_session "$1"
 
 # Final health check
 check_health
