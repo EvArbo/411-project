@@ -39,7 +39,7 @@ else
     echo "No running container named ${IMAGE_NAME}_container found."
 fi
 
-# Run the Docker container with the necessary ports and volume mappings
+# run the Docker container with  necessary ports and volume mappings
 echo "Running Docker container..."
 docker run -d \
   --name ${IMAGE_NAME}_container \
