@@ -25,17 +25,7 @@ def fetch_ingredient_by_id(ingredient_id):
         - fiber: Fiber content
         Returns None if the API request fails.
     
-    Example:
-        >>> fetch_ingredient_by_id(1234)
-        {
-            'id': 1234, 
-            'name': 'Apple', 
-            'energy': 52, 
-            'protein': 0.3, 
-            'carbohydrates': 14.0, 
-            'fat': 0.2, 
-            'fiber': 2.4
-        }
+    
     """
     url = f"{WGER_INGREDIENT_API}{ingredient_id}/"
     response = requests.get(url)
@@ -70,9 +60,6 @@ def store_ingredient(ingredient_id):
         - Error (already stored): {'status': 'error', 'message': 'Ingredient already stored.'}
         - Error (not found): {'status': 'error', 'message': 'Ingredient not found in API.'}
     
-    Example:
-        >>> store_ingredient(1234)
-        {'status': 'success', 'message': 'Ingredient added.', 'ingredient': {...}}
     """
     if ingredient_id in stored_ingredients:
         return {"status": "error", "message": "Ingredient already stored."}
@@ -99,9 +86,6 @@ def update_ingredient(ingredient_id, updates):
         - Success: {'status': 'success', 'message': 'Ingredient updated.', 'ingredient': {...}}
         - Error: {'status': 'error', 'message': 'Ingredient not found in memory.'}
     
-    Example:
-        >>> update_ingredient(1234, {'protein': 0.5, 'fat': 0.3})
-        {'status': 'success', 'message': 'Ingredient updated.', 'ingredient': {...}}
     """
     if ingredient_id not in stored_ingredients:
         return {"status": "error", "message": "Ingredient not found in memory."}
@@ -121,10 +105,7 @@ def delete_ingredient(ingredient_id):
         dict: A status response with the following possible formats:
         - Success: {'status': 'success', 'message': 'Ingredient deleted.', 'ingredient': {...}}
         - Error: {'status': 'error', 'message': 'Ingredient not found in memory.'}
-    
-    Example:
-        >>> delete_ingredient(1234)
-        {'status': 'success', 'message': 'Ingredient deleted.', 'ingredient': {...}}
+  
     """
     if ingredient_id in stored_ingredients:
         deleted = stored_ingredients.pop(ingredient_id)
@@ -139,9 +120,7 @@ def list_stored_ingredients():
     Returns:
         dict: A dictionary containing a list of all stored ingredient details.
     
-    Example:
-        >>> list_stored_ingredients()
-        {'stored_ingredients': [{...}, {...}, ...]}
+    
     """
     return {"stored_ingredients": list(stored_ingredients.values())}
 
@@ -157,9 +136,7 @@ def get_ingredient(ingredient_id):
         - Success: {'status': 'success', 'ingredient': {...}}
         - Error: {'status': 'error', 'message': 'Ingredient not found in memory.'}
     
-    Example:
-        >>> get_ingredient(1234)
-        {'status': 'success', 'ingredient': {...}}
+    
     """
     if ingredient_id in stored_ingredients:
         return {"status": "success", "ingredient": stored_ingredients[ingredient_id]}
