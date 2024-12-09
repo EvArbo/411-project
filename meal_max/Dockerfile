@@ -13,12 +13,14 @@ COPY .env /app/.env
 # Install any needed packages specified in requirements.txt
 RUN pip install --no-cache-dir -r requirements.txt
 
+RUN apt update && apt install -y curl
+
 # Install SQLite3
 RUN apt-get update && apt-get install -y sqlite3
 
 # Add a shell script that loads the .env file and handles database creation
 COPY ./sql/create_db.sh /app/sql/create_db.sh
-COPY ./sql/init_db.sql /app/sql/create_user_table.sql
+COPY ./sql/create_meal_table.sql /app/sql/create_meal_table.sql
 RUN chmod +x /app/sql/create_db.sh
 RUN chmod +x /app/entrypoint.sh
 
@@ -29,4 +31,4 @@ VOLUME ["/app/db"]
 EXPOSE 5001
 
 # Run the entrypoint script when the container launches
-CMD ["python", "app.py"]
+CMD ["/app/entrypoint.sh"]

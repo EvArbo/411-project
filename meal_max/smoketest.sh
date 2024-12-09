@@ -1,10 +1,17 @@
 #!/bin/bash
 
-# Define the base URL for the Flask API
-BASE_URL="http://localhost:5001/api"
+#!/bin/bash
 
+# Environment variables
+BASE_URL="http://localhost:5000/api"
+DB_PATH="/app/db/fitness_tracker.db"
+SQL_CREATE_TABLE_PATH="/app/sql/init_db.sql"
+CREATE_DB=true
+WGER_API_KEY="28f9abfb4e3108279553c836838d34d1b833280f"
+WGER_API_URL="https://wger.de/api/v2"
 # Flag to control whether to echo JSON output
 ECHO_JSON=false
+
 
 # Parse command-line arguments
 while [ "$#" -gt 0 ]; do
