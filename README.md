@@ -1,2 +1,5 @@
 # 411-project
-411 project harrison evan beren
+Meal Tracker
+Harrison hche@bu.edu, 
+Evan evanda@bu.edu,
+Beren bydonmez@bu.edu
