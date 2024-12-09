@@ -1,5 +1,5 @@
 # 411-project    -    Meal-Tracker
-Meal Tracker
+Meal Tracker by
 Harrison hche@bu.edu, 
 Evan evanda@bu.edu,
 Beren bydonmez@bu.edu
