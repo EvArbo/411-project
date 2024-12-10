@@ -125,9 +125,9 @@ delete_food() {
 # Step 1: Verify the service is up and running
 check_health
 
-# Step 2: Test user login functionality (currently commented out)
-# create_user
-# login_user
+# Step 2: Test user login functionality 
+create_user
+login_user
 
 # Step 3: Test food ingredient functionality
 # Add two specific food items by their IDs
