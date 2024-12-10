@@ -17,6 +17,7 @@ How to run the Meal Tracker Application:
 2. Then run: docker run -p 5000:5000 meal-tracker-app
 3. In a new terminal (like Git Bash), run: ./smoketest.sh
 
+Route Specifications
 
 Route: / \
 Request Type: GET \
