@@ -26,7 +26,7 @@ No GET parameters \
 Request Example: \
 GET / \
 Response Example: \
-String: “Welcome to the Meal Tracker App!” \
+String: “Welcome to the Meal Tracker App!”
 
 Route: /health \
 Request Type: GET \
@@ -38,7 +38,7 @@ GET /health \
 Response Example: \
 Code: 200 \
 Content: \
-{ “status: “healthy” } \
+{ “status: “healthy” }
 
 Route: /food/add/<int:ingredient_id> \
 Request Type: POST \
@@ -66,125 +66,125 @@ Response Example: \
 } \
 			}
 
-Route: /food/update/<int:ingredient_id>
-Request Type: PUT
-Purpose: Updates the ingredient by ID in stored_ingredients dictionary.
-Request Format: JSON
-PUT Body:
-{
-“name”: “Tomato”
-	“energy”: 50,
-	“protein”: 2.5
-			}
-ingredient_id (Integer): Ingredient ID of the ingredient that should be added.
-Request Example:
-cURL: PUT /food/update/1
-Body:
-{
-"name": "Tomato",
-"energy": 50,
-“protein”: 2.5
-}
-Response Example:
- Code: 200
- Content: 
-{
-"status": "success",
-“message”: “Ingredient added.”,
-“ingredient”: 
-	{
-		“id": 1,
-"name": "Tomato",
-"energy": 50,
-"protein": 2.5,
-"carbohydrates": 10,
-"fat": 1,
-"fiber": 3
-}
-			}
-
-Route: /food/delete/<int:ingredient_id>
-Request Type: DELETE
-Purpose: Deletes the ingredient by ID in stored_ingredients dictionary.
-Request Format: JSON
-No DELETE Body
-ingredient_id (Integer): Ingredient ID of the ingredient that should be added.
-Request Example:
-cURL: PUT /food/delete/1
-Response Example:
- Code: 200
- Content: 
-{
-"status": "success",
-“message”: “Ingredient deleted.”,
-“ingredient”: 
-	{
-		“id": 1,
-"name": "Tomato",
-"energy": 50,
-"protein": 2.5,
-"carbohydrates": 10,
-"fat": 1,
-"fiber": 3
-}
+Route: /food/update/<int:ingredient_id> \
+Request Type: PUT \
+Purpose: Updates the ingredient by ID in stored_ingredients dictionary. \
+Request Format: JSON \
+PUT Body: \
+{ \
+“name”: “Tomato” \
+	“energy”: 50, \
+	“protein”: 2.5 \
+			} \
+ingredient_id (Integer): Ingredient ID of the ingredient that should be added. \
+Request Example: \
+cURL: PUT /food/update/1 \
+Body: \
+{ \
+"name": "Tomato", \
+"energy": 50, \
+“protein”: 2.5 \
+} \
+Response Example: \
+ Code: 200 \
+ Content:  \
+{ \
+"status": "success", \
+“message”: “Ingredient added.”, \
+“ingredient”:  \
+	{ \
+		“id": 1, \
+"name": "Tomato", \
+"energy": 50, \
+"protein": 2.5, \
+"carbohydrates": 10, \
+"fat": 1, \
+"fiber": 3 \
+} \
 			}
 
-Route: /food/<int:ingredient_id>
-Request Type: GET
-Purpose: Returns information about an ingredient by ID from stored_ingredients dictionary.
-Request Format: JSON
-ingredient_id (Integer): Ingredient ID of the ingredient that should be added.
-Request Example:
-cURL: GET /food/1
-Response Example:
- Code: 200
- Content: 
-{
-"status": "success",
-“ingredient”: 
-	{
-		“id": 1,
-"name": "Tomato",
-"energy": 50,
-"protein": 2.5,
-"carbohydrates": 10,
-"fat": 1,
-"fiber": 3
-}
+Route: /food/delete/<int:ingredient_id> \
+Request Type: DELETE \
+Purpose: Deletes the ingredient by ID in stored_ingredients dictionary. \
+Request Format: JSON \
+No DELETE Body \
+ingredient_id (Integer): Ingredient ID of the ingredient that should be added. \
+Request Example: \
+cURL: PUT /food/delete/1 \
+Response Example: \
+ Code: 200 \
+ Content:  \
+{ \
+"status": "success", \
+“message”: “Ingredient deleted.”, \
+“ingredient”:  \
+	{ \
+		“id": 1, \
+"name": "Tomato", \
+"energy": 50, \
+"protein": 2.5, \
+"carbohydrates": 10, \
+"fat": 1, \
+"fiber": 3 \
+} \
 			}
 
-Route: /food/list
-Request Type: GET
-Purpose: Returns information on all ingredients in stored_ingredients dictionary.
-Request Format: JSON
-stored_ingredients (Array of Objects): list of all ingredients.
-Request Example:
-cURL: GET /food/1
-Response Example:
- Code: 200
- Content: 
-{
-"stored_ingredients":
-[
-{
-"id": 1,
-"name": "Tomato",
-"energy": 50,
-"protein": 2.5,
-"carbohydrates": 10,
-"fat": 1,
-"fiber": 3
-},
-{
-"id": 2,
-"name": "Onion",
-"energy": 40,
-"protein": 1.1,
-"carbohydrates": 9.3,
-"fat": 0.1,
-"fiber": 1.7
-}
-]
+Route: /food/<int:ingredient_id> \
+Request Type: GET \
+Purpose: Returns information about an ingredient by ID from stored_ingredients dictionary. \
+Request Format: JSON \
+ingredient_id (Integer): Ingredient ID of the ingredient that should be added. \
+Request Example: \
+cURL: GET /food/1 \
+Response Example: \
+ Code: 200 \
+ Content:  \
+{ \
+"status": "success", \
+“ingredient”:  \
+	{ \
+		“id": 1, \
+"name": "Tomato", \
+"energy": 50, \
+"protein": 2.5, \
+"carbohydrates": 10, \
+"fat": 1, \
+"fiber": 3 \
+} \
+			}
+
+Route: /food/list \
+Request Type: GET \
+Purpose: Returns information on all ingredients in stored_ingredients dictionary. \
+Request Format: JSON \
+stored_ingredients (Array of Objects): list of all ingredients. \
+Request Example: \
+cURL: GET /food/1 \
+Response Example: \
+ Code: 200 \
+ Content:  \
+{ \
+"stored_ingredients": \
+[ \
+{ \
+"id": 1, \
+"name": "Tomato", \
+"energy": 50, \
+"protein": 2.5, \
+"carbohydrates": 10, \
+"fat": 1, \
+"fiber": 3 \
+}, \
+{ \
+"id": 2, \
+"name": "Onion", \
+"energy": 40, \
+"protein": 1.1, \
+"carbohydrates": 9.3, \
+"fat": 0.1, \
+"fiber": 1.7 \
+} \
+] \
 }
 
 
