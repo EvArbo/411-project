@@ -18,7 +18,7 @@ How to run the Meal Tracker Application:
 3. In a new terminal (like Git Bash), run: ./smoketest.sh
 
 
-Route: /
+Route: / \
 Request Type: GET
 Purpose: Returns a welcome message for the application.
 Request Format:
