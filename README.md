@@ -1,3 +1,5 @@
+Google Doc of Formatted README file: https://docs.google.com/document/d/1cbagQ2LKVb2h2vnXpsTZcGNkiww9Xb0cG5U-d1LhGYM/edit?usp=sharing
+
 # 411-project    -    Meal-Tracker
 Meal Tracker by
 Harrison hche@bu.edu, 
