@@ -19,51 +19,51 @@ How to run the Meal Tracker Application:
 
 
 Route: / \
-Request Type: GET
-Purpose: Returns a welcome message for the application.
-Request Format:
-No GET parameters
-Request Example:
-GET /
-Response Example:
-String: “Welcome to the Meal Tracker App!”
+Request Type: GET \
+Purpose: Returns a welcome message for the application. \
+Request Format: \
+No GET parameters \
+Request Example: \
+GET / \
+Response Example: \
+String: “Welcome to the Meal Tracker App!” \
 
-Route: /health
-Request Type: GET
-Purpose: Verifies that the app is running.
-Request Format: JSON
-No GET parameters
-Request Example:
-GET /health
-Response Example:
-Code: 200
-Content:
-{ “status: “healthy” }
+Route: /health \
+Request Type: GET \
+Purpose: Verifies that the app is running. \
+Request Format: JSON \
+No GET parameters \
+Request Example: \
+GET /health \
+Response Example: \
+Code: 200 \
+Content: \
+{ “status: “healthy” } \
 
-Route: /food/add/<int:ingredient_id>
-Request Type: POST
-Purpose: Adds a new ingredient to stored_ingredients dictionary based on the ingredient ID.
-Request Format: JSON
-No POST Body
-ingredient_id (Integer): Ingredient ID of the ingredient that should be added.
-Request Example:
-cURL: /food/add/1
-Response Example:
- Code: 201
- Content: 
-{
-"status": "success",
-“message”: “Ingredient added.”,
-“ingredient”: 
-	{
-		“id": 1,
-"name": "Tomato",
-"energy": 50,
-"protein": 2.5,
-"carbohydrates": 10,
-"fat": 1,
-"fiber": 3
-}
+Route: /food/add/<int:ingredient_id> \
+Request Type: POST \
+Purpose: Adds a new ingredient to stored_ingredients dictionary based on the ingredient ID. \
+Request Format: JSON \
+No POST Body \
+ingredient_id (Integer): Ingredient ID of the ingredient that should be added. \
+Request Example: \
+cURL: /food/add/1 \
+Response Example: \
+ Code: 201 \
+ Content:  \
+{ \
+"status": "success", \
+“message”: “Ingredient added.”, \
+“ingredient”:  \
+	{ \
+		“id": 1, \
+"name": "Tomato", \
+"energy": 50, \
+"protein": 2.5, \
+"carbohydrates": 10, \
+"fat": 1, \
+"fiber": 3 \
+} \
 			}
 
 Route: /food/update/<int:ingredient_id>
