@@ -13,7 +13,7 @@ Notes for Grading: The berensnewbranch2 and meal-max copy was worked on initiall
 ![smoketest image](smoketestscreenshotmealtracker.PNG)
 
 How to run the Meal Tracker Application:
-1. In terminal, run: docker build -t meal-tracker-app
+1. In terminal, run: docker build -t meal-tracker-app .
 2. Then: docker run -p 5000:5000 meal-tracker-app
 3. In a new terminal, run: ./smoketest
 
